@@ -69,7 +69,8 @@ const send_email = async () => {
             connection.release(); 
                 mailFrom.subject = "Ticket submited with id #" + rows[0].id;
                 mailTo.subject = "Ticket submited with id #" + rows[0].id;
-                mailTo.text = rows[0].message + "\n Check dashboard for more info";
+                mailFrom.text = rows[0].message + "\n Check dashboard for more info";
+                mailTo.text = "Your message: " + rows[0].message;
                 transporter.sendMail(mailFrom, function(error, info){
                     if (error) {
                         console.log(error);
