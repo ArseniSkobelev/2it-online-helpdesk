@@ -102,3 +102,156 @@ main {
 .form div {
     margin-bottom: 15px;
 }
+
+#sendBtn {
+    background-color: #b7b7b76e;
+    font-weight: bold;
+    padding: 12px 0;
+    font-size: 20px;
+    text-transform: uppercase;
+    outline: none;
+    border: none;
+    width: 100%;
+}
+
+#form > div {
+    width: 100%;
+}
+
+#seventh-block {
+    width: 102.9%;
+}
+
+@media only screen and (max-width: 1440px) {
+    #left {
+        display: none;
+    }
+
+    #right {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    #container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+
+}
+
+@media only screen and (max-width: 1024px) {
+    .heading-text-right {
+        font-size: 25px;
+    }
+}
+
+@media only screen and (max-width: 768px) {
+    #right {
+        padding: 50px 100px;
+    }
+}
+
+@media only screen and (max-width: 425px) {
+    #right {
+        padding: 10px 10px;
+    }
+
+    .heading-text-right {
+        font-size: 20px;
+        text-align: center;
+        margin-top: 20px;
+    }
+
+    .small-input {
+        height: 30px;
+    }
+
+    .medium-input {
+        height: 30px;
+    }
+
+    .bigboy {
+        height: 170px;
+    }
+
+    h3 {
+        font-size: 15px;
+    }
+
+    #sendBtn {
+        font-size: 15px;
+    }
+    
+    main {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+}
+
+@media only screen and (max-width: 375px) {
+    #right {
+        padding: 30px 10px;
+    }
+
+    .heading-text-right {
+        font-size: 20px;
+        text-align: center;
+    }
+
+    .small-input {
+        height: 30px;
+    }
+
+    .medium-input {
+        height: 30px;
+    }
+
+    .bigboy {
+        height: 120px;
+    }
+
+    h3 {
+        font-size: 15px;
+    }
+
+    #sendBtn {
+        font-size: 15px;
+    }
+
+    .heading-text-right {
+        margin-bottom: 10px;
+    }
+}
+
+@media only screen and (max-width: 320px) {
+    .small-input {
+        height: 20px;
+    }
+
+    .medium-input {
+        height: 20px;
+    }
+
+    .heading-text-right {
+        font-size: 17px;
+    }
+
+    #container {
+        height: 82.5vh;
+    }
+
+    .bigboy {
+        height: 100px;
+    }
+}
+
+@media only screen and (min-width: 1024px) {
+    #right {
+        padding: 50px 100px;
+    }
+}

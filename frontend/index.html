@@ -7,7 +7,6 @@
     <title>Document</title>
     <link rel="stylesheet" href="./css/index.css">
     <script defer src="./js/index.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.17/tailwind.min.css" integrity="sha512-yXagpXH0ulYCN8G/Wl7GK+XIpdnkh5fGHM5rOzG8Kb9Is5Ua8nZWRx5/RaKypcbSHc56mQe0GBG0HQIGTmd8bw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 <body>
     <div id="gradient-bg"></div>
@@ -15,7 +14,7 @@
         <div id="container">
             <div id="left">
                 <div class="info-heading">
-                    <button onclick="send()">Send req</button>
+
                 </div>
                 <div class="info-paragraph">
                     
@@ -29,24 +28,27 @@
                     <div id="first-block">
                         <div id="second-block" class="small">
                             <h3>Ditt namn</h3>
-                            <input type="text" class="small-input">
+                            <input type="text" class="small-input" id="input1">
                         </div>
                         <div id="third-block" class="small">
                             <h3>Etternamn</h3>
-                            <input type="text" class="small-input">
+                            <input type="text" class="small-input" id="input2">
                         </div>
                     </div>
                     <div id="fourth-block">
-                        <h3>Ditt namn</h3>
-                        <input type="text" class="medium-input">
+                        <h3>Kontaktemail</h3>
+                        <input type="text" class="medium-input" id="input3">
                     </div>
                     <div id="fifth-block">
-                        <h3>Ditt namn</h3>
-                        <input type="text" class="medium-input">
+                        <h3>Overskrift</h3>
+                        <input type="text" class="medium-input" id="input4">
                     </div>
                     <div id="sixth-block">
-                        <h3>Ditt namn</h3>
-                        <textarea name="Text1" cols="40" rows="5" class="bigboy"></textarea>
+                        <h3 class="smaller-text">Forklar problemet / forespørselen</h3>
+                        <textarea id="input5" name="Text1" cols="40" rows="5" class="bigboy"></textarea>
+                    </div>
+                    <div id="seventh-block">
+                        <button id="sendBtn" onclick="send()">Send</button>
                     </div>
                 </div>
             </div>
