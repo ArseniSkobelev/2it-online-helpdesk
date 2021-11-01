@@ -48,7 +48,7 @@ app.post('/form', function (req, res) {
             connection.release(); 
             // call email func
             if(err) {
-                res.status(500).send("not ok")
+                res.status(500).send("Something went wrong with updating database")
                 throw err
             }
             mailTo.to = req.query.email
@@ -56,7 +56,7 @@ app.post('/form', function (req, res) {
             setTimeout(function(){
                 send_email();
             }, 10000);
-            res.status(200).send("Something went wrong with updating database")
+            res.status(200).send("Database updated succsexfully")
         });
     });    
 })
