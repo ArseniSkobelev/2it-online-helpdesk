@@ -107,12 +107,16 @@
             const login = document.getElementById("login")
             
             login.addEventListener("submit", async (event) => {
-            event.preventDefault()
-            
-            const username = document.getElementById("username")
-            const password = document.getElementById("password")
-            
-            ipcRenderer.send("authenticated")
+                event.preventDefault()
+                
+                let username = document.getElementById("username").value
+                let password = document.getElementById("password").value
+                
+                loginData = {
+                    "username":username, "password":password
+                }
+
+                ipcRenderer.send("authenticated", loginData)
             })
         </script>
    </body>
