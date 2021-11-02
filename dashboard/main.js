@@ -1,5 +1,16 @@
-const { app, BrowserWindow, ipcMain } = require('electron')
-const path = require('path')
+require('dotenv').config();
+const { app, BrowserWindow, ipcMain } = require('electron');
+const path = require('path');
+const mysql = require('mysql');
+
+let currentUser = {}
+
+const pool = mysql.createPool({
+    host     : process.env.DB_HOST,
+    user     : process.env.DB_USER,
+    password : process.env.DB_PASS,
+    database : process.env.DB_DATABASE
+});
 
 function createWindow () {
     const win = new BrowserWindow({
@@ -18,12 +29,34 @@ function createWindow () {
         win.loadFile(`./src/login.html`)
     })
 
-    ipcMain.on("authenticated", async event => {
-        win.loadFile('./src/index.html');
+    ipcMain.on("authenticated", (event, arg) => {
+        // win.loadFile('./src/index.html');
+        loginData = arg;
 
+        user = loginData['username']
+        psw = arg['password']
+
+        currentUser = arg['username']
+
+        pool.getConnection((err, connection) => {
+            if(err) throw err;
+            console.log('connected as id ' + connection.threadId);
+            connection.query('SELECT * FROM users WHERE username=?',[user], (err, rows) => {
+                if(rows[0].password == psw) {
+                    win.loadFile(`./src/index.html`)
+                } else {
+                    win.loadFile(`./src/login.html`)
+                }
+                connection.release();
+            });
+        });
     })
-
+    ipcMain.on("indexLoaded", function(e){
+        e.sender.send("indexLoadedReply", currentUser)
+    })
 }
+
+
 
 app.whenReady().then(() => {
     createWindow();

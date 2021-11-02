@@ -13,6 +13,8 @@
     "electron": "^15.3.0"
   },
   "dependencies": {
+    "dotenv": "^10.0.0",
+    "mysql": "^2.18.1",
     "path": "^0.12.7"
   }
 }
