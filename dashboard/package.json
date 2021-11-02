@@ -1,0 +1,15 @@
+{
+  "name": "dashboard",
+  "version": "1.0.0",
+  "description": "A dashboard made with Electron to answer support tickets",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "electron ."
+  },
+  "author": "ArseniSkobelev, NUB31",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^15.3.0"
+  }
+}
