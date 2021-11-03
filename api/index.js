@@ -42,9 +42,9 @@ app.post('/form', function (req, res) {
             req.query.name,
             req.query.email,
             req.query.title,
+            req.query.message,
             req.query.phonenum,
-            req.query.avdeling,
-            req.query.message
+            req.query.avdeling
         ], (err, rows) => {
             connection.release(); 
             // call email func
