@@ -70,7 +70,13 @@ function createWindow () {
     })
 }
 
-
+// connection.query('SELECT * FROM log WHERE message_from = (?)',[email], (err, rows) => {
+//     connection.release(); 
+//     if(err) {
+//         throw err
+//     }
+//     console.log(rows);
+// });
 
 app.whenReady().then(() => {
     createWindow();
