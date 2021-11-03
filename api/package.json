@@ -13,6 +13,9 @@
     "cors": "^2.8.5",
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
+    "imap": "^0.8.19",
+    "imap-simple": "^5.1.0",
+    "lodash": "^4.17.21",
     "mysql": "^2.18.1",
     "nodemailer": "^6.7.0"
   }

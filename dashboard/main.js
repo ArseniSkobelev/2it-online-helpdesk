@@ -34,17 +34,23 @@ function createWindow () {
         loginData = arg;
 
         user = loginData['username']
-        psw = arg['password']
+        psw = loginData['password']
 
-        currentUser = arg['username']
+        currentUser = loginData['username']
 
         pool.getConnection((err, connection) => {
             if(err) throw err;
             console.log('connected as id ' + connection.threadId);
             connection.query('SELECT * FROM users WHERE username=?',[user], (err, rows) => {
-                if(rows[0].password == psw) {
-                    win.loadFile(`./src/index.html`)
-                } else {
+                if (rows.length == 1) {
+                    userPsw = rows[0].password;
+                    if(psw == userPsw) {
+                        win.loadFile(`./src/index.html`)
+    
+                    } else {
+                        win.loadFile(`./src/login.html`)
+                    }
+                }else {
                     win.loadFile(`./src/login.html`)
                 }
                 connection.release();
@@ -53,6 +59,14 @@ function createWindow () {
     })
     ipcMain.on("indexLoaded", function(e){
         e.sender.send("indexLoadedReply", currentUser)
+
+        pool.getConnection((err, connection) => {
+            if(err) throw err;
+            console.log('connected as id ' + connection.threadId);
+            connection.query('SELECT * FROM users WHERE username=?',[user], (err, rows) => {
+                console.log(rows)
+            })
+        });
     })
 }
 
