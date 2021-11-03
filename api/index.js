@@ -4,6 +4,7 @@ const mysql = require('mysql');
 const cors = require('cors')
 const express = require('express')
 var imaps = require('imap-simple');
+const simpleParser = require('mailparser').simpleParser;
 const _ = require('lodash');
 const app = express()
 app.use(cors())
@@ -122,18 +123,22 @@ app.listen(port, () => {
     console.log(`listening at port: ${port}`)
 })
 
-
 imaps.connect(config).then(function (connection) {
     return connection.openBox('INBOX').then(function () {
         var searchCriteria = ['1:5'];
         var fetchOptions = {
-            bodies: ['HEADER', 'TEXT'],
+            bodies: ['HEADER', 'TEXT', ''],
         };
         return connection.search(searchCriteria, fetchOptions).then(function (messages) {
             messages.forEach(function (item) {
-                var all = _.find(item.parts, { "which": "TEXT" })
-                var html = (Buffer.from(all.body, 'base64').toString('ascii'));
-                console.log(html)
+                var all = _.find(item.parts, { "which": "" })
+                var id = item.attributes.uid;
+                var idHeader = "Imap-Id: "+id+"\r\n";
+                simpleParser(idHeader+all.body, (err, mail) => {
+                    // access to the whole mail object
+                    console.log(mail.subject)
+                    console.log(mail.text)
+                });
             });
         });
     });
