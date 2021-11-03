@@ -3,9 +3,17 @@ const nodemailer = require('nodemailer');
 const mysql = require('mysql');
 const cors = require('cors')
 const express = require('express')
+var imaps = require('imap-simple');
+const _ = require('lodash');
 const app = express()
 app.use(cors())
 const port = 3000
+
+if ("development" == app.get("env")) {
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+}
+
+const { json } = require('express');
 
 const pool = mysql.createPool({
     host     : process.env.DB_HOST,
@@ -14,24 +22,38 @@ const pool = mysql.createPool({
     database : process.env.DB_DATABASE
 });
 
+var config = {
+    imap: {
+        user: process.env.EMAIL_USER,
+        password: process.env.EMAIL_PASSWORD,
+        host: 'imap.gmail.com',
+        port: 993,
+        tls: true,
+        authTimeout: 3000
+    }
+};
+
 var transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASSWORD
     }
-  });
+});
+
 var mailFrom = {
     from: 'helpdesk-bot@avgs-ikt.com',
     to: 'vg1im.alesundvgs@gmail.com',
     subject: 'New support ticket submitted with id',
-    text: 'Check dashboard for more info'
+    text: 'Check dashboard for more info',
+    encoding: 'base64'
 };
 var mailTo = {
     from: 'helpdesk-bot@avgs-ikt.com',
     to: 'vg1im.alesundvgs@gmail.com',
     subject: 'New support ticket submitted with id',
-    text: ''
+    text: '',
+    encoding: 'base64'
 };
   
 app.post('/form', function (req, res) {
@@ -99,3 +121,20 @@ const send_email = async () => {
 app.listen(port, () => {
     console.log(`listening at port: ${port}`)
 })
+
+
+imaps.connect(config).then(function (connection) {
+    return connection.openBox('INBOX').then(function () {
+        var searchCriteria = ['1:5'];
+        var fetchOptions = {
+            bodies: ['HEADER', 'TEXT'],
+        };
+        return connection.search(searchCriteria, fetchOptions).then(function (messages) {
+            messages.forEach(function (item) {
+                var all = _.find(item.parts, { "which": "TEXT" })
+                var html = (Buffer.from(all.body, 'base64').toString('ascii'));
+                console.log(html)
+            });
+        });
+    });
+});
