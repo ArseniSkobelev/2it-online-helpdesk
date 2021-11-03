@@ -38,11 +38,12 @@ app.post('/form', function (req, res) {
     pool.getConnection((err, connection) => {
         if(err) throw err;
         console.log('connected as id ' + connection.threadId);
-        connection.query('INSERT INTO messages (name, lastname, email, title, message) VALUES (?, ?, ?, ?, ?)',[
-            req.query.firstname,
-            req.query.lastname,
+        connection.query('INSERT INTO messages (name, email, title, message, phonenum, avdeling) VALUES (?, ?, ?, ?, ?, ?)',[
+            req.query.name,
             req.query.email,
             req.query.title,
+            req.query.phonenum,
+            req.query.avdeling,
             req.query.message
         ], (err, rows) => {
             connection.release(); 
