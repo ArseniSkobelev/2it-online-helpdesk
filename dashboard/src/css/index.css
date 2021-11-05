@@ -1,10 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
 
-.shown-list{
-    margin-left: 10px;
-    cursor: pointer;
-}
-
 * {
     margin: 0;
     padding: 0;
@@ -74,4 +69,45 @@ main {
     padding: 14px 10px;
     border-radius: 10px;
     margin-bottom: 20px;
+    cursor: pointer;
+}
+.Ticket-dark {
+    background-color: #888888 !important;
+    padding: 14px 10px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    cursor: pointer;
+}
+
+.shown-list{
+    padding: 14px 10px;
+    height: 100%;
+    width: fit-content;
+}
+.shown-list > h6{
+    font-size: 13px;
+    color: #888888;
+}
+.shown-list > h1{
+    font-size: 13px;
+    color: #888888;
+}
+.sent{
+    display: flex;
+    justify-content: flex-end;
+}
+
+.sent > div{
+    background-color: limegreen;
+    justify-content: flex-end;
+    border-radius: 10px 10px 0 10px;
+}
+.recieved > div{
+    background-color: #C6C6C6;
+    border-radius: 10px 10px 10px 0;
+}
+.messages > div{
+    display: flex;
+    flex-direction: column;
+    width: 100%;
 }

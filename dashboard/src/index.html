@@ -10,34 +10,22 @@
   <body>
     <div id="form-container">
       <div id="ticketMenu">
-        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Amet iste quisquam expedita, perspiciatis ex eius est ut reiciendis! Aliquid a quibusdam eveniet hic, distinctio cumque temporibus consectetur possimus blanditiis provident?</p>
       </div>
       <div id="messageArea">
-        <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Ipsam cumque debitis earum doloribus, dignissimos architecto deleniti sunt nostrum vel fuga laborum, iusto incidunt nemo. Quasi esse dicta minima labore iste!</p>
+        <ul id="messages">
+        </ul>
       </div>
       <div id="rightMenu">
         <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Facere doloremque blanditiis ducimus assumenda, cumque et magnam ea recusandae reprehenderit odio ullam tempora voluptas ipsam, numquam possimus! Officia voluptate hic sint?</p>
       </div>
     </div>
-    
-    
-    
-    
-    
-    <!-- <div id="ok">
-      <button id="Update-button" onclick="Update()">Update messages</button>
-      <h1>Open tickets</h1>
-      <div id="TicketListOpen"></div>
-      <h1>Closed tickets</h1>
-      <div id="TicketListClosed"></div>
-    </div> -->
   </body>
   <script>
       const { ipcRenderer } = require("electron")
 
       let currentUser = ''
       var checkIfOpen = []
-      
+
       ipcRenderer.send('indexLoaded')
       ipcRenderer.on("indexLoadedReply", (e, arg) => {
         currentUser = arg;
@@ -48,18 +36,12 @@
         list.className = "Ticket"
         list.id = arg.id
         list.innerHTML = "Ticket " + arg.id + ": " + arg.title 
-        // list.classList.add("hidden")
         list.onclick = function () {
-          if (this.childNodes[0].className == "shown-list") {
-            // for (let i = 0; i < this.childNodes.length; i++) {
-            //   this.childNodes[i].className = "hidden"
-            // }
-          } else {
-            // for (let i = 0; i < this.childNodes.length; i++) {
-            //   this.childNodes[i].className = "shown-list"
-            // }
-          }
           ipcRenderer.send('loadMessages', this.id)
+          for (let i = 0; i < document.getElementsByClassName("Ticket").length; i++) {
+            document.getElementsByClassName("Ticket")[i].className = "Ticket"
+          }
+            this.className = "Ticket-dark Ticket"
         };
         for (i in arg) {
           let item = document.createElement("div");
@@ -68,37 +50,32 @@
           list.appendChild(item);
         }
         if (arg.status == "closed") {
-          document.getElementById("TicketListClosed").appendChild(list);
+          // document.getElementById("TicketListClosed").appendChild(list);
         }else {
           document.getElementById("ticketMenu").appendChild(list);
         }
       })
       ipcRenderer.on("logLoadedReply", (e, arg) => {
-        console.log(document.getElementById(arg.id).childElementCount)
-        if (document.getElementById(arg.id).childElementCount - 5 == arg.elements) {
+        if (arg.id == 0) {
+          document.getElementById("messages").innerHTML = "<li class='sent'><div class='shown-list'>No messages yet</div></li>"
           return
-        } else{
-          for (let i = 0; i < document.getElementById(arg.id).childNodes.length; i++) {
-            if (i > 5) {
-              document.getElementById(arg.id).removeChild[i]
-            }
-          }
-          // var list = document.getElementById(arg.id)
-          //     let item = document.createElement("li");
-          //     item.className = "shown-list"
-          //     if (arg.message.includes("***REMOVED***") && arg.message.includes("Fra:")) {
-          //       arg.message = arg.message.split("Fra:")[0]
-          //     }
-          //     if (arg.from.includes("***REMOVED***")) {
-          //       item.style.background = "#F1982FC"
-          //     }else{
-          //       item.style.background = "#cfcfcf"
-          //     }
-          //     item.innerHTML = "<h6>" + arg.date + "</h6><br>" + "<h1>" + arg.from + "</h1><br>" + "<p>" + arg.message + "</p'><br>"
-          //     list.appendChild(item);
-          //     checkIfOpen.push(arg.id)
-          //     checkIfOpen.push(arg.elements)
         }
+        document.getElementById("messages").innerHTML = ""
+        var midSection = document.getElementById("messages")
+        let item = document.createElement("li");
+        if (arg.message.includes("***REMOVED***") && arg.message.includes("Fra:") && arg.message.includes("________________________________")) {
+          arg.message = arg.message.split("________________________________")[0]
+        }
+        if (arg.from.includes("***REMOVED***")) {
+          item.style.background = "#F1982FC"
+          item.classList.add("sent")
+        }else{
+          item.classList.add("recieved")
+        }
+        item.innerHTML = '<div class="shown-list ' + arg.id + ' recieved"><h1>' + arg.from + '</h1><h6>' + arg.date.toUTCString().split(',')[0] + ' ' + arg.date.toUTCString().split(' ')[4].split(':')[0] + ':' + arg.date.toUTCString().split(' ')[4].split(':')[1] + '</h6>' +  '<p>' + arg.message + '</p></div>'
+        midSection.appendChild(item);
+        checkIfOpen.push(arg.id)
+        checkIfOpen.push(arg.elements)
       })
 
       function Update() {
