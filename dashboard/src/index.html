@@ -68,8 +68,8 @@
           var list = document.getElementById(arg.id)
               let item = document.createElement("li");
               item.className = "shown-list"
-              if (arg.message.includes("vg1im.alesundvgs@gmail.com") && arg.message.includes("Fra:")) {
-                arg.message = arg.message.split("Fra:")[0]
+              if (arg.message.includes("vg1im.alesundvgs@gmail.com") && arg.message.includes("Fra:") && arg.message.includes("________________________________")) {
+                arg.message = arg.message.split("________________________________")[0]
               }
               if (arg.from.includes("vg1im.alesundvgs@gmail.com")) {
                 item.style.background = "#F1982FC"
