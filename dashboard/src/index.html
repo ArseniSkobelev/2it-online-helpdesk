@@ -4,23 +4,99 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" integrity="sha512-wnea99uKIC3TJF7v4eKk4Y+lMz2Mklv18+r4na2Gn1abDRPPOeef95xTzdwGD9e6zXJBteMIhZ1+68QC5byJZw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
         <meta charset="UTF-8">
         <title>Hello World!</title>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+        <link rel="stylesheet" href="./css/index.css">
   </head>
   <body>
     <button onclick="refresh()">Refresh</button>
     <h1>Hello World!</h1>
-    We are using Node.js <span id="node-version"></span>,
-    Chromium <span id="chrome-version"></span>,
-    and Electron <span id="electron-version"></span>.
-    <script>
+    <button id="Update-button" onclick="Update()">Update messages</button>
+    <h1>Open tickets</h1>
+    <div id="TicketListOpen"></div>
+    <h1>Closed tickets</h1>
+    <div id="TicketListClosed"></div>
+  </body>
+  <script>
       const { ipcRenderer } = require("electron")
 
       let currentUser = ''
-
+      var checkIfOpen = []
       
       ipcRenderer.send('indexLoaded')
       ipcRenderer.on("indexLoadedReply", (e, arg) => {
         currentUser = arg;
       })
+      ipcRenderer.on("ticketsLoadedReply", (e, arg) => {
+        var list = document.createElement("ul");
+        list.className = "Ticket"
+        list.id = arg.id
+        list.innerHTML = "Ticket " + arg.id + ": " + arg.title 
+        list.onclick = function () {
+          if (this.childNodes[0].className == "shown-list") {
+            for (let i = 0; i < this.childNodes.length; i++) {
+              this.childNodes[i].className = "hidden"
+            }
+          } else {
+            for (let i = 0; i < this.childNodes.length; i++) {
+              this.childNodes[i].className = "shown-list"
+            }
+          }
+          ipcRenderer.send('loadMessages', this.id)
+        };
+        for (i in arg) {
+          let item = document.createElement("li");
+          item.className = "hidden"
+          item.innerHTML = i + ": " + arg[i];
+          list.appendChild(item);
+        }
+        if (arg.status == "closed") {
+          document.getElementById("TicketListClosed").appendChild(list);
+        }else {
+          document.getElementById("TicketListOpen").appendChild(list);
+        }
+      })
+      ipcRenderer.on("logLoadedReply", (e, arg) => {
+        console.log(document.getElementById(arg.id).childElementCount)
+        if (document.getElementById(arg.id).childElementCount - 5 == arg.elements) {
+          return
+        } else{
+          for (let i = 0; i < document.getElementById(arg.id).childNodes.length; i++) {
+            if (i > 5) {
+              document.getElementById(arg.id).removeChild[i]
+            }
+          }
+          var list = document.getElementById(arg.id)
+              let item = document.createElement("li");
+              item.className = "shown-list"
+              if (arg.message.includes("***REMOVED***") && arg.message.includes("Fra:")) {
+                arg.message = arg.message.split("Fra:")[0]
+              }
+              if (arg.from.includes("***REMOVED***")) {
+                item.style.background = "#F1982FC"
+              }else{
+                item.style.background = "#cfcfcf"
+              }
+              item.innerHTML = "<h6>" + arg.date + "</h6><br>" + "<h1>" + arg.from + "</h1><br>" + "<p>" + arg.message + "</p'><br>"
+              list.appendChild(item);
+              checkIfOpen.push(arg.id)
+              checkIfOpen.push(arg.elements)
+        }
+      })
+
+      function Update() {
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function () {
+          if (xhr.readyState !== 4) return;
+          if (xhr.status >= 200 && xhr.status < 300) {
+            console.log("success")
+
+          } else {
+            console.log("error in refreshing")
+          }
+          console.log('Request sent');
+        };
+        xhr.open('POST', 'http://localhost:3000/update');
+        xhr.send();
+      }
     </script>
-  </body>
 </html>

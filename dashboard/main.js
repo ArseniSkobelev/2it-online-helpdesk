@@ -42,6 +42,7 @@ function createWindow () {
             if(err) throw err;
             console.log('connected as id ' + connection.threadId);
             connection.query('SELECT * FROM users WHERE username=?',[user], (err, rows) => {
+                connection.release();
                 if (rows.length == 1) {
                     userPsw = rows[0].password;
                     if(psw == userPsw) {
@@ -53,7 +54,6 @@ function createWindow () {
                 }else {
                     win.loadFile(`./src/login.html`)
                 }
-                connection.release();
             });
         });
     })
@@ -64,19 +64,46 @@ function createWindow () {
             if(err) throw err;
             console.log('connected as id ' + connection.threadId);
             connection.query('SELECT * FROM users WHERE username=?',[user], (err, rows) => {
+                connection.release();
+            })
+        });
+        pool.getConnection((err, connection) => {
+            if(err) throw err;
+            console.log('connected as id ' + connection.threadId);
+            connection.query('SELECT * FROM messages', (err, rows) => {
+                connection.release();
+                rows.forEach(element => {
+                    e.sender.send("ticketsLoadedReply", {
+                        id: element.id, 
+                        from: element.email,
+                        title: element.title,
+                        message: element.message, 
+                        status: element.status
+                    })
+                });
+            })
+        });
+    })
+    ipcMain.on("loadMessages", function(e, id){
+        pool.getConnection((err, connection) => {
+            if(err) throw err;
+            console.log('connected as id ' + connection.threadId);
+            connection.query('SELECT * FROM log WHERE ticket_id = ?',[id], (err, rows) => {
+                connection.release();
                 console.log(rows)
+                rows.forEach(element => {
+                    e.sender.send("logLoadedReply", {
+                        id: element.ticket_id,
+                        from: element.message_from,
+                        message: element.message_text,
+                        date: element.date,
+                        elements: rows.length
+                    })
+                });
             })
         });
     })
 }
-
-// connection.query('SELECT * FROM log WHERE message_from = (?)',[email], (err, rows) => {
-//     connection.release(); 
-//     if(err) {
-//         throw err
-//     }
-//     console.log(rows);
-// });
 
 app.whenReady().then(() => {
     createWindow();
