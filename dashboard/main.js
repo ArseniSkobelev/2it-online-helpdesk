@@ -3,6 +3,15 @@ const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const mysql = require('mysql');
 const { title } = require('process');
+const nodemailer = require('nodemailer');
+
+var transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASSWORD
+    }
+});
 
 require('electron-reload')(__dirname, {
     // Note that the path to electron may vary according to the main file
@@ -10,6 +19,15 @@ require('electron-reload')(__dirname, {
 });
 
 let currentUser = {}
+
+var mailTo = {
+    from: 'helpdesk-bot@avgs-ikt.com',
+    to: '',
+    subject: '',
+    text: '',
+    encoding: 'base64'
+};
+
 
 const pool = mysql.createPool({
     host     : process.env.DB_HOST,
@@ -43,6 +61,7 @@ function createWindow () {
         psw = loginData['password']
 
         currentUser = loginData['username']
+        mailTo.subject = 'Helpdesk -' + currentUser, 
 
         pool.getConnection((err, connection) => {
             if(err) throw err;
@@ -100,6 +119,17 @@ function createWindow () {
                 connection.release();
             })
         });
+        mailTo.text = obj.message
+        mailTo.to = obj.email
+        console.log(mailTo)
+        transporter.sendMail(mailTo, function(error, info){
+            if (error) {
+                console.log(error);
+            } else {
+                console.log("Email sent: " + info.response);
+                console.log(mailTo)
+            }
+        });
     })
     ipcMain.on("loadMessages", function(e, id){
         var title
@@ -151,3 +181,4 @@ app.whenReady().then(() => {
 app.on('window-all-closed', function () {
     if (process.platform !== 'darwin') app.quit()
 })
+
