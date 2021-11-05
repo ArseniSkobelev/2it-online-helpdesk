@@ -39,7 +39,7 @@ main {
     box-shadow: 5px 3px 36px -2px rgba(0,0,0,0.61);
     display: flex;
     flex-direction: row;
-    justify-content: center;
+    /* justify-content: center; */
 }
 
 #ticketMenu {
@@ -58,10 +58,15 @@ main {
 
 #messageArea {
     width: 52%;
+    padding: 0!important;
 }
 
 #form-container > div {
     padding: 50px 40px;
+}
+#paddinBox{
+    padding: 30px 30px;
+    height: 100%;
 }
 
 .Ticket {
@@ -79,35 +84,78 @@ main {
     cursor: pointer;
 }
 
+#messages{
+    height: calc(100% - 160px);
+    overflow: auto;
+}
 .shown-list{
     padding: 14px 10px;
     height: 100%;
     width: fit-content;
 }
-.shown-list > h6{
-    font-size: 13px;
-    color: #888888;
-}
-.shown-list > h1{
-    font-size: 13px;
-    color: #888888;
-}
 .sent{
     display: flex;
     justify-content: flex-end;
 }
-
 .sent > div{
     background-color: limegreen;
     justify-content: flex-end;
     border-radius: 10px 10px 0 10px;
+    font-size: 13px;
+    color: #444444;
+}
+
+.sent > div > p{
+    font-size: 17px;
+    color: black;
 }
 .recieved > div{
     background-color: #C6C6C6;
     border-radius: 10px 10px 10px 0;
+    font-size: 13px;
+    color: #888888;
+}
+.recieved > div > p{
+    font-size: 17px;
+    color: black;
 }
 .messages > div{
     display: flex;
     flex-direction: column;
     width: 100%;
+}
+.message{
+    margin-bottom: 10px;
+}
+#inputBoundary{
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    height: 60px;
+}
+#messageBox{
+    background-color: #C6C6C6;
+    border-radius: 10px;
+    width: 100%;
+    padding: 0 10px;
+}
+#titleCard{
+    height: 100px;
+    background-color: #E6E6E6;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+#title{
+    font-size: 30px;
+    font-weight: 600;
+    height: 50%;
+    display: flex;
+    align-items: center;
+}
+#description{
+    height: 50%;
+    font-size: 17px;
+    display: flex;
+    align-items: center;
 }

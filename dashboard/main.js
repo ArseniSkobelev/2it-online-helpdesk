@@ -2,6 +2,7 @@ require('dotenv').config();
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const mysql = require('mysql');
+const { title } = require('process');
 
 require('electron-reload')(__dirname, {
     // Note that the path to electron may vary according to the main file
@@ -76,6 +77,7 @@ function createWindow () {
             if(err) throw err;
             console.log('connected as id ' + connection.threadId);
             connection.query('SELECT * FROM messages', (err, rows) => {
+                if(err) throw err;
                 connection.release();
                 rows.forEach(element => {
                     e.sender.send("ticketsLoadedReply", {
@@ -89,11 +91,30 @@ function createWindow () {
             })
         });
     })
-    ipcMain.on("loadMessages", function(e, id){
+    ipcMain.on("sendMessage", function(e, obj) {
         pool.getConnection((err, connection) => {
             if(err) throw err;
             console.log('connected as id ' + connection.threadId);
+            connection.query('INSERT INTO log (ticket_id, message_from, message_text) VALUES (?, ?, ?)',[obj.id, '***REMOVED***', obj.message], (err, rows) => {
+                if(err) throw err;
+                connection.release();
+            })
+        });
+    })
+    ipcMain.on("loadMessages", function(e, id){
+        var title
+        var desc
+        pool.getConnection((err, connection) => {
+            if(err) throw err;
+            console.log('connected as id ' + connection.threadId);
+            connection.query('SELECT * FROM messages WHERE id = ?',[id], (err, rows) => {
+                if(err) throw err;
+                title = rows[0].title
+                desc = rows[0].message
+                console.log(rows)
+            })
             connection.query('SELECT * FROM log WHERE ticket_id = ?',[id], (err, rows) => {
+                if(err) throw err;
                 connection.release();
                 if (rows.length>0) {
                     rows.forEach(element => {
@@ -102,12 +123,16 @@ function createWindow () {
                             from: element.message_from,
                             message: element.message_text,
                             date: element.date,
-                            elements: rows.length
+                            elements: rows.length,
+                            title: title,
+                            description: desc
                         })
                     });
                 } else {
                     e.sender.send("logLoadedReply", {
-                        id: 0
+                        id: 0,
+                        title: title,
+                        description: desc
                     }) 
                 }
             })
