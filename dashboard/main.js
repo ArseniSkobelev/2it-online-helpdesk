@@ -95,16 +95,21 @@ function createWindow () {
             console.log('connected as id ' + connection.threadId);
             connection.query('SELECT * FROM log WHERE ticket_id = ?',[id], (err, rows) => {
                 connection.release();
-                console.log(rows)
-                rows.forEach(element => {
+                if (rows.length>0) {
+                    rows.forEach(element => {
+                        e.sender.send("logLoadedReply", {
+                            id: element.ticket_id,
+                            from: element.message_from,
+                            message: element.message_text,
+                            date: element.date,
+                            elements: rows.length
+                        })
+                    });
+                } else {
                     e.sender.send("logLoadedReply", {
-                        id: element.ticket_id,
-                        from: element.message_from,
-                        message: element.message_text,
-                        date: element.date,
-                        elements: rows.length
-                    })
-                });
+                        id: 0
+                    }) 
+                }
             })
         });
     })
