@@ -12,8 +12,17 @@
       <div id="ticketMenu">
       </div>
       <div id="messageArea">
-        <ul id="messages">
-        </ul>
+        <div id="titleCard">
+          <h1 id="title"></h1>
+          <p id="description"></p>
+        </div>
+        <div id="paddinBox">
+          <ul id="messages">
+          </ul>
+          <div id="inputBoundary">
+            <input type="text" id="messageBox" class="hidden">
+          </div>
+        </div>
       </div>
       <div id="rightMenu">
         <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Facere doloremque blanditiis ducimus assumenda, cumque et magnam ea recusandae reprehenderit odio ullam tempora voluptas ipsam, numquam possimus! Officia voluptate hic sint?</p>
@@ -21,77 +30,97 @@
     </div>
   </body>
   <script>
-      const { ipcRenderer } = require("electron")
+    const { ipcRenderer } = require("electron")
 
-      let currentUser = ''
-      var checkIfOpen = []
+    let currentTicket
+    var checkIfOpen = []
 
-      ipcRenderer.send('indexLoaded')
-      ipcRenderer.on("indexLoadedReply", (e, arg) => {
-        currentUser = arg;
-      })
-      ipcRenderer.on("ticketsLoadedReply", (e, arg) => {
-        var list = document.createElement("div");
-        list.setAttribute('id', 'ticketList')
-        list.className = "Ticket"
-        list.id = arg.id
-        list.innerHTML = "Ticket " + arg.id + ": " + arg.title 
-        list.onclick = function () {
-          ipcRenderer.send('loadMessages', this.id)
-          for (let i = 0; i < document.getElementsByClassName("Ticket").length; i++) {
-            document.getElementsByClassName("Ticket")[i].className = "Ticket"
-          }
-            this.className = "Ticket-dark Ticket"
-        };
-        for (i in arg) {
-          let item = document.createElement("div");
-          item.classList.add('hidden')
-          item.innerHTML = i + ": " + arg[i];
-          list.appendChild(item);
-        }
-        if (arg.status == "closed") {
-          // document.getElementById("TicketListClosed").appendChild(list);
-        }else {
-          document.getElementById("ticketMenu").appendChild(list);
-        }
-      })
-      ipcRenderer.on("logLoadedReply", (e, arg) => {
-        if (arg.id == 0) {
-          document.getElementById("messages").innerHTML = "<li class='sent'><div class='shown-list'>No messages yet</div></li>"
-          return
-        }
-        document.getElementById("messages").innerHTML = ""
-        var midSection = document.getElementById("messages")
-        let item = document.createElement("li");
-        if (arg.message.includes("vg1im.alesundvgs@gmail.com") && arg.message.includes("Fra:") && arg.message.includes("________________________________")) {
-          arg.message = arg.message.split("________________________________")[0]
-        }
-        if (arg.from.includes("vg1im.alesundvgs@gmail.com")) {
-          item.style.background = "#F1982FC"
-          item.classList.add("sent")
-        }else{
-          item.classList.add("recieved")
-        }
-        item.innerHTML = '<div class="shown-list ' + arg.id + ' recieved"><h1>' + arg.from + '</h1><h6>' + arg.date.toUTCString().split(',')[0] + ' ' + arg.date.toUTCString().split(' ')[4].split(':')[0] + ':' + arg.date.toUTCString().split(' ')[4].split(':')[1] + '</h6>' +  '<p>' + arg.message + '</p></div>'
-        midSection.appendChild(item);
-        checkIfOpen.push(arg.id)
-        checkIfOpen.push(arg.elements)
-      })
-
-      function Update() {
-        var xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function () {
-          if (xhr.readyState !== 4) return;
-          if (xhr.status >= 200 && xhr.status < 300) {
-            console.log("success")
-
-          } else {
-            console.log("error in refreshing")
-          }
-          console.log('Request sent');
-        };
-        xhr.open('POST', 'http://localhost:3000/update');
-        xhr.send();
+    document.getElementById("messageBox").addEventListener("keydown", ()=>{
+      if (event.keyCode === 13) {
+        console.log(currentTicket)
+        ipcRenderer.send('sendMessage', {
+          id: currentTicket.id, 
+          message: document.getElementById("messageBox").value
+        })
+        document.getElementById("messageBox").value = ""
+        refreshMessages()
       }
-    </script>
+    })
+
+    ipcRenderer.send('indexLoaded')
+    ipcRenderer.on("indexLoadedReply", (e, arg) => {
+    })
+    ipcRenderer.on("ticketsLoadedReply", (e, arg) => {
+      var list = document.createElement("div");
+      list.setAttribute('id', 'ticketList')
+      list.className = "Ticket"
+      list.id = arg.id
+      list.innerHTML = "Ticket " + arg.id + ": " + arg.title 
+      list.onclick = function () {
+        document.getElementById("messages").innerHTML=""
+        ipcRenderer.send('loadMessages', this.id)
+        for (let i = 0; i < document.getElementsByClassName("Ticket").length; i++) {
+          document.getElementsByClassName("Ticket")[i].className = "Ticket"
+        }
+        this.className = "Ticket-dark Ticket"
+        document.getElementById("messageBox").className = "shown"
+        currentTicket = arg;
+      };
+      for (i in arg) {
+        let item = document.createElement("div");
+        item.classList.add('hidden')
+        item.innerHTML = i + ": " + arg[i];
+        list.appendChild(item);
+      }
+      if (arg.status == "closed") {
+        // document.getElementById("TicketListClosed").appendChild(list);
+      }else {
+        document.getElementById("ticketMenu").appendChild(list);
+      }
+    })
+    ipcRenderer.on("logLoadedReply", (e, arg) => {
+      document.getElementById("title").innerText = arg.title
+      document.getElementById("description").innerText = arg.description
+      if (arg.id == 0) {
+        document.getElementById("messages").innerHTML = "<li class='sent'><div class='shown-list'><p>No messages yet</p></div></li>"
+        return
+      }
+      var midSection = document.getElementById("messages")
+      let item = document.createElement("li");
+      item.classList.add("message")
+      if (arg.message.includes("vg1im.alesundvgs@gmail.com") && arg.message.includes("Fra:") && arg.message.includes("________________________________")) {
+        arg.message = arg.message.split("________________________________")[0]
+      }
+      if (arg.from.includes("vg1im.alesundvgs@gmail.com")) {
+        item.style.background = "#F1982FC"
+        item.classList.add("sent")
+      }else{
+        item.classList.add("recieved")
+      }
+      item.innerHTML = '<div class="shown-list ' + arg.id + ' recieved"><h1>' + arg.from + '</h1><h6>' + arg.date.toUTCString().split(',')[0] + ' ' + arg.date.toUTCString().split(' ')[4].split(':')[0] + ':' + arg.date.toUTCString().split(' ')[4].split(':')[1] + '</h6>' +  '<p>' + arg.message + '</p></div>'
+      document.getElementById("title").innerText = arg.title
+      document.getElementById("description").innerText = arg.description
+      midSection.appendChild(item);
+      checkIfOpen.push(arg.id)
+      checkIfOpen.push(arg.elements)
+    })
+    function Update() {
+      var xhr = new XMLHttpRequest();
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState !== 4) return;
+        if (xhr.status >= 200 && xhr.status < 300) {
+          console.log("success")
+        } else {
+          console.log("error in refreshing")
+        }
+        console.log('Request sent');
+      };
+      xhr.open('POST', 'http://localhost:3000/update');
+      xhr.send();
+    }
+    function refreshMessages() {
+        document.getElementById("messages").innerHTML=""
+        ipcRenderer.send('loadMessages', currentTicket.id)
+    };
+  </script>
 </html>
