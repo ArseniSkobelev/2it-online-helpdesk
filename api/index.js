@@ -85,6 +85,11 @@ app.post('/form', function (req, res) {
     });    
 })
 
+app.post('/update', function (req, res) {
+    updateTickets();
+    res.status(200).send("Updated messages yes")
+})
+
 const send_email = async () => {
     pool.getConnection((err, connection) => {
         if(err) throw err;

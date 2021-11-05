@@ -105,7 +105,8 @@
         <script>
             const { ipcRenderer } = require("electron")
             const login = document.getElementById("login")
-            
+            document.getElementById("username").focus()
+
             login.addEventListener("submit", async (event) => {
                 event.preventDefault()
                 
