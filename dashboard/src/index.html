@@ -3,18 +3,34 @@
     <head>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" integrity="sha512-wnea99uKIC3TJF7v4eKk4Y+lMz2Mklv18+r4na2Gn1abDRPPOeef95xTzdwGD9e6zXJBteMIhZ1+68QC5byJZw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
         <meta charset="UTF-8">
-        <title>Hello World!</title>
+        <title>Dashboard</title>
         <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
         <link rel="stylesheet" href="./css/index.css">
   </head>
   <body>
-    <button onclick="refresh()">Refresh</button>
-    <h1>Hello World!</h1>
-    <button id="Update-button" onclick="Update()">Update messages</button>
-    <h1>Open tickets</h1>
-    <div id="TicketListOpen"></div>
-    <h1>Closed tickets</h1>
-    <div id="TicketListClosed"></div>
+    <div id="form-container">
+      <div id="ticketMenu">
+        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Amet iste quisquam expedita, perspiciatis ex eius est ut reiciendis! Aliquid a quibusdam eveniet hic, distinctio cumque temporibus consectetur possimus blanditiis provident?</p>
+      </div>
+      <div id="messageArea">
+        <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Ipsam cumque debitis earum doloribus, dignissimos architecto deleniti sunt nostrum vel fuga laborum, iusto incidunt nemo. Quasi esse dicta minima labore iste!</p>
+      </div>
+      <div id="rightMenu">
+        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Facere doloremque blanditiis ducimus assumenda, cumque et magnam ea recusandae reprehenderit odio ullam tempora voluptas ipsam, numquam possimus! Officia voluptate hic sint?</p>
+      </div>
+    </div>
+    
+    
+    
+    
+    
+    <!-- <div id="ok">
+      <button id="Update-button" onclick="Update()">Update messages</button>
+      <h1>Open tickets</h1>
+      <div id="TicketListOpen"></div>
+      <h1>Closed tickets</h1>
+      <div id="TicketListClosed"></div>
+    </div> -->
   </body>
   <script>
       const { ipcRenderer } = require("electron")
@@ -27,32 +43,34 @@
         currentUser = arg;
       })
       ipcRenderer.on("ticketsLoadedReply", (e, arg) => {
-        var list = document.createElement("ul");
+        var list = document.createElement("div");
+        list.setAttribute('id', 'ticketList')
         list.className = "Ticket"
         list.id = arg.id
         list.innerHTML = "Ticket " + arg.id + ": " + arg.title 
+        // list.classList.add("hidden")
         list.onclick = function () {
           if (this.childNodes[0].className == "shown-list") {
-            for (let i = 0; i < this.childNodes.length; i++) {
-              this.childNodes[i].className = "hidden"
-            }
+            // for (let i = 0; i < this.childNodes.length; i++) {
+            //   this.childNodes[i].className = "hidden"
+            // }
           } else {
-            for (let i = 0; i < this.childNodes.length; i++) {
-              this.childNodes[i].className = "shown-list"
-            }
+            // for (let i = 0; i < this.childNodes.length; i++) {
+            //   this.childNodes[i].className = "shown-list"
+            // }
           }
           ipcRenderer.send('loadMessages', this.id)
         };
         for (i in arg) {
-          let item = document.createElement("li");
-          item.className = "hidden"
+          let item = document.createElement("div");
+          item.classList.add('hidden')
           item.innerHTML = i + ": " + arg[i];
           list.appendChild(item);
         }
         if (arg.status == "closed") {
           document.getElementById("TicketListClosed").appendChild(list);
         }else {
-          document.getElementById("TicketListOpen").appendChild(list);
+          document.getElementById("ticketMenu").appendChild(list);
         }
       })
       ipcRenderer.on("logLoadedReply", (e, arg) => {
@@ -65,21 +83,21 @@
               document.getElementById(arg.id).removeChild[i]
             }
           }
-          var list = document.getElementById(arg.id)
-              let item = document.createElement("li");
-              item.className = "shown-list"
-              if (arg.message.includes("***REMOVED***") && arg.message.includes("Fra:")) {
-                arg.message = arg.message.split("Fra:")[0]
-              }
-              if (arg.from.includes("***REMOVED***")) {
-                item.style.background = "#F1982FC"
-              }else{
-                item.style.background = "#cfcfcf"
-              }
-              item.innerHTML = "<h6>" + arg.date + "</h6><br>" + "<h1>" + arg.from + "</h1><br>" + "<p>" + arg.message + "</p'><br>"
-              list.appendChild(item);
-              checkIfOpen.push(arg.id)
-              checkIfOpen.push(arg.elements)
+          // var list = document.getElementById(arg.id)
+          //     let item = document.createElement("li");
+          //     item.className = "shown-list"
+          //     if (arg.message.includes("***REMOVED***") && arg.message.includes("Fra:")) {
+          //       arg.message = arg.message.split("Fra:")[0]
+          //     }
+          //     if (arg.from.includes("***REMOVED***")) {
+          //       item.style.background = "#F1982FC"
+          //     }else{
+          //       item.style.background = "#cfcfcf"
+          //     }
+          //     item.innerHTML = "<h6>" + arg.date + "</h6><br>" + "<h1>" + arg.from + "</h1><br>" + "<p>" + arg.message + "</p'><br>"
+          //     list.appendChild(item);
+          //     checkIfOpen.push(arg.id)
+          //     checkIfOpen.push(arg.elements)
         }
       })
 
