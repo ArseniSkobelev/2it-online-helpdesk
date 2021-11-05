@@ -40,7 +40,8 @@
         console.log(currentTicket)
         ipcRenderer.send('sendMessage', {
           id: currentTicket.id, 
-          message: document.getElementById("messageBox").value
+          message: document.getElementById("messageBox").value,
+          email: currentTicket.from
         })
         document.getElementById("messageBox").value = ""
         refreshMessages()
@@ -65,6 +66,7 @@
         this.className = "Ticket-dark Ticket"
         document.getElementById("messageBox").className = "shown"
         currentTicket = arg;
+        gotoBottom("messages")
       };
       for (i in arg) {
         let item = document.createElement("div");
@@ -103,6 +105,7 @@
       midSection.appendChild(item);
       checkIfOpen.push(arg.id)
       checkIfOpen.push(arg.elements)
+      gotoBottom("messages")
     })
     function Update() {
       var xhr = new XMLHttpRequest();
@@ -122,5 +125,9 @@
         document.getElementById("messages").innerHTML=""
         ipcRenderer.send('loadMessages', currentTicket.id)
     };
+    function gotoBottom(id){
+      var element = document.getElementById(id);
+      element.scrollTop = element.scrollHeight - element.clientHeight;
+    }
   </script>
 </html>
