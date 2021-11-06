@@ -58,15 +58,14 @@ main {
 
 #messageArea {
     width: 52%;
-    padding: 0!important;
 }
 
 #form-container > div {
     padding: 50px 40px;
 }
+
 #paddinBox{
-    padding: 30px 30px;
-    height: 100%;
+    padding: 50px 40px;
 }
 
 .Ticket {
@@ -76,6 +75,7 @@ main {
     margin-bottom: 20px;
     cursor: pointer;
 }
+
 .Ticket-dark {
     background-color: #888888 !important;
     padding: 14px 10px;
@@ -84,78 +84,91 @@ main {
     cursor: pointer;
 }
 
-#messages{
+#messages {
     height: calc(100% - 160px);
     overflow: auto;
 }
-.shown-list{
+.shown-list {
     padding: 14px 10px;
     height: 100%;
     width: fit-content;
 }
-.sent{
+.sent {
     display: flex;
     justify-content: flex-end;
 }
-.sent > div{
-    background-color: limegreen;
+.sent > div {
+    background-color: #9184d1;
     justify-content: flex-end;
     border-radius: 10px 10px 0 10px;
-    font-size: 13px;
-    color: #444444;
+    font-size: 12.5px;
+    font-weight: 400;
+    color: #e1dfeb;
 }
 
-.sent > div > p{
+.sent > div > p {
     font-size: 17px;
-    color: black;
+    color: white;
 }
-.recieved > div{
-    background-color: #C6C6C6;
+.recieved > div {
+    background-color: #7aa0c7;
     border-radius: 10px 10px 10px 0;
     font-size: 13px;
-    color: #888888;
+    color: #cad6e4;
 }
-.recieved > div > p{
+.recieved > div > p {
     font-size: 17px;
-    color: black;
+    color: white;
 }
-.messages > div{
+.messages > div {
     display: flex;
     flex-direction: column;
     width: 100%;
 }
-.message{
+.message {
     margin-bottom: 10px;
 }
-#inputBoundary{
+#inputBoundary {
     width: 100%;
     display: flex;
     justify-content: center;
-    height: 60px;
+    height: 40px;
 }
-#messageBox{
-    background-color: #C6C6C6;
+#messageBox {
+    border: #707070a4 2px solid;
     border-radius: 10px;
     width: 100%;
     padding: 0 10px;
 }
-#titleCard{
-    height: 100px;
-    background-color: #E6E6E6;
+#titleCard {
+    background-color: white;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    padding: 0px 40px;
 }
-#title{
+
+/* Set main ticket info sizing */
+#title {
     font-size: 30px;
     font-weight: 600;
-    height: 50%;
-    display: flex;
-    align-items: center;
 }
-#description{
-    height: 50%;
-    font-size: 17px;
-    display: flex;
-    align-items: center;
+
+#description {
+    font-size: 15px;
+    font-weight: 400;
+    color: rgba(0, 0, 0, 0.7);
 }
+
+/* Capitalise first letter in the title and description of the ticket */
+#description {display:inline-block}
+#description:first-letter {text-transform: uppercase}
+
+#title {display:inline-block}
+#title:first-letter {text-transform: uppercase}
+
+.sent > div > p {display:inline-block}
+.sent > div > p:first-letter {text-transform: uppercase}
+
+.recieved > div > p {display:inline-block}
+.recieved > div > p:first-letter {text-transform: uppercase}
