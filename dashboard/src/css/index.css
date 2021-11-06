@@ -47,6 +47,7 @@ main {
     border-top-left-radius: 10px;
     border-bottom-left-radius: 10px;
     width: 24%;
+    padding: 50px 40px;
 }
 
 #rightMenu {
@@ -54,18 +55,12 @@ main {
     border-top-right-radius: 10px;
     border-bottom-right-radius: 10px;
     width: 24%;
+    padding: 50px 40px;
 }
 
 #messageArea {
     width: 52%;
-}
-
-#form-container > div {
-    padding: 50px 40px;
-}
-
-#paddinBox{
-    padding: 50px 40px;
+    padding: 50px 50px;
 }
 
 .Ticket {
@@ -85,9 +80,11 @@ main {
 }
 
 #messages {
-    height: calc(100% - 160px);
-    overflow: auto;
+    height: calc(100% - 200px);
+    overflow: scroll;
 }
+
+
 .shown-list {
     padding: 14px 10px;
     height: 100%;
@@ -98,7 +95,7 @@ main {
     justify-content: flex-end;
 }
 .sent > div {
-    background-color: #9184d1;
+    background-color: #7a6db9;
     justify-content: flex-end;
     border-radius: 10px 10px 0 10px;
     font-size: 12.5px;
@@ -110,8 +107,13 @@ main {
     font-size: 17px;
     color: white;
 }
+
+#paddinBox {
+    height: 100%;
+}
+
 .recieved > div {
-    background-color: #7aa0c7;
+    background-color: #678db4;
     border-radius: 10px 10px 10px 0;
     font-size: 13px;
     color: #cad6e4;
@@ -139,13 +141,15 @@ main {
     border-radius: 10px;
     width: 100%;
     padding: 0 10px;
+    height: 40px;
 }
+
 #titleCard {
     background-color: white;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding: 0px 40px;
+    margin-bottom: 50px;
 }
 
 /* Set main ticket info sizing */
@@ -155,9 +159,23 @@ main {
 }
 
 #description {
-    font-size: 15px;
+    font-size: 13px;
     font-weight: 400;
     color: rgba(0, 0, 0, 0.7);
+    height: 60px;
+    overflow: scroll;
+}
+
+#description::-webkit-scrollbar {
+    display: none;
+}
+
+#title::-webkit-scrollbar {
+    display: none;
+}
+
+#messages::-webkit-scrollbar {
+    display: none;
 }
 
 /* Capitalise first letter in the title and description of the ticket */
@@ -172,3 +190,7 @@ main {
 
 .recieved > div > p {display:inline-block}
 .recieved > div > p:first-letter {text-transform: uppercase}
+
+#messageAreaContainer {
+    height: 100%;
+}
