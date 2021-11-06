@@ -61,7 +61,7 @@ function createWindow () {
         psw = loginData['password']
 
         currentUser = loginData['username']
-        mailTo.subject = 'Helpdesk -' + currentUser, 
+        mailTo.subject = 'Helpdesk - ' + currentUser, 
 
         pool.getConnection((err, connection) => {
             if(err) throw err;
