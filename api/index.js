@@ -144,7 +144,7 @@ function updateTickets() {
                         pool.getConnection((err, connection) => {
                             if(err) throw err;
                             console.log('connected as id ' + connection.threadId);
-                            connection.query('SELECT * FROM log, WHERE message_text = ?',[mail.text], (err, rows) => {
+                            connection.query("SELECT * FROM log WHERE message_text = ?",[mail.text], (err, rows) => {
                                 connection.release(); 
                                 console.log("Checked matching for messages")
                                 if (rows) {
