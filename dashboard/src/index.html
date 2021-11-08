@@ -14,6 +14,10 @@
       <div id="messageArea">
         <div id="messageAreaContainer">
           <div id="titleCard">
+            <div class="flex-row">
+              <p id="email"></p>
+              <p id="status"></p>
+            </div>
             <h1 id="title"></h1>
             <p id="description"></p>
           </div>
@@ -66,6 +70,10 @@
         this.className = "Ticket-dark Ticket"
         document.getElementById("messageBox").className = "shown"
         currentTicket = arg;
+        document.getElementById("title").innerText = ""
+        document.getElementById("description").innerText = ""
+        document.getElementById("email").innerText = ""
+        document.getElementById("status").innerText = ""
         gotoBottom("messages")
       };
       for (i in arg) {
@@ -102,6 +110,8 @@
       item.innerHTML = '<div class="shown-list ' + arg.id + ' recieved"><h1>' + arg.from + '</h1><h6>' + arg.date.toUTCString().split(',')[0] + ' ' + arg.date.toUTCString().split(' ')[4].split(':')[0] + ':' + arg.date.toUTCString().split(' ')[4].split(':')[1] + '</h6>' +  '<p>' + arg.message + '</p></div>'
       document.getElementById("title").innerText = arg.title
       document.getElementById("description").innerText = arg.description
+      document.getElementById("email").innerText = arg.email
+      document.getElementById("status").innerText = arg.status
       midSection.appendChild(item);
       checkIfOpen.push(arg.id)
       checkIfOpen.push(arg.elements)

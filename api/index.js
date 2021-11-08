@@ -147,37 +147,39 @@ function updateTickets() {
                             connection.query('SELECT * FROM log, WHERE message_text = ?',[mail.text], (err, rows) => {
                                 connection.release(); 
                                 console.log("Checked matching for messages")
-                                if (rows.length == 0) {
-                                    console.log("Found a non matching message")
-                                    pool.getConnection((err, connection) => {
-                                        if(err) throw err;
-                                        console.log('connected as id ' + connection.threadId);
-                                        connection.query('SELECT id FROM messages WHERE email = ? ORDER BY id DESC',[mail.from.value[0].address], (err, rows) => {
-                                        connection.release(); 
-                                        console.log("Searched for a previousely opened case with this email")
-                                        if (rows.length >= 1) {
-                                            console.log("Found an old case")
-                                            var id = rows[0].id
-                                            console.log(id)
-                                            pool.getConnection((err, connection) => {
-                                                if(err) throw err;
-                                                console.log('connected as id ' + connection.threadId);
-                                                connection.query('INSERT INTO log (ticket_id, message_from, message_text) VALUES (?, ?, ?)',[rows[0].id, mail.from.value[0].address, mail.text], (err, rows) => {
-                                                    connection.release(); 
-                                                    console.log("Added message to case")
-                                                    if(err) {
-                                                        throw err
-                                                    }
-                                                });
-                                            });  
-                                        } else{
-                                            console.log("this is a new case")
-                                        }
-                                        if(err) {
-                                            throw err
+                                if (rows) {
+                                    if (rows.length == 0) {
+                                        console.log("Found a non matching message")
+                                        pool.getConnection((err, connection) => {
+                                            if(err) throw err;
+                                            console.log('connected as id ' + connection.threadId);
+                                            connection.query('SELECT id FROM messages WHERE email = ? ORDER BY id DESC',[mail.from.value[0].address], (err, rows) => {
+                                            connection.release(); 
+                                            console.log("Searched for a previousely opened case with this email")
+                                            if (rows.length >= 1) {
+                                                console.log("Found an old case")
+                                                var id = rows[0].id
+                                                console.log(id)
+                                                pool.getConnection((err, connection) => {
+                                                    if(err) throw err;
+                                                    console.log('connected as id ' + connection.threadId);
+                                                    connection.query('INSERT INTO log (ticket_id, message_from, message_text) VALUES (?, ?, ?)',[rows[0].id, mail.from.value[0].address, mail.text], (err, rows) => {
+                                                        connection.release(); 
+                                                        console.log("Added message to case")
+                                                        if(err) {
+                                                            throw err
+                                                        }
+                                                    });
+                                                });  
+                                            } else{
+                                                console.log("this is a new case")
                                             }
+                                            if(err) {
+                                                throw err
+                                                }
+                                            });
                                         });
-                                    });
+                                    }
                                 }
                                 if(err) {
                                     throw err

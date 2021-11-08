@@ -134,6 +134,8 @@ function createWindow () {
     ipcMain.on("loadMessages", function(e, id){
         var title
         var desc
+        var email
+        var status
         pool.getConnection((err, connection) => {
             if(err) throw err;
             console.log('connected as id ' + connection.threadId);
@@ -141,6 +143,8 @@ function createWindow () {
                 if(err) throw err;
                 title = rows[0].title
                 desc = rows[0].message
+                email = rows[0].email
+                status = rows[0].status
                 console.log(rows)
             })
             connection.query('SELECT * FROM log WHERE ticket_id = ?',[id], (err, rows) => {
@@ -155,7 +159,9 @@ function createWindow () {
                             date: element.date,
                             elements: rows.length,
                             title: title,
-                            description: desc
+                            description: desc,
+                            email: email,
+                            status: status
                         })
                     });
                 } else {
