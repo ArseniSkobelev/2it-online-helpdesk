@@ -15,6 +15,7 @@ if ("development" == app.get("env")) {
 }
 
 const { json } = require('express');
+const { cond } = require('lodash');
 
 const pool = mysql.createPool({
     host     : process.env.DB_HOST,
@@ -165,12 +166,16 @@ function updateTickets() {
                                                         console.log('connected as id ' + connection.threadId);
                                                         if (mail.text.includes("***REMOVED***") && mail.text.includes("Fra:") && mail.text.includes("________________________________")) {
                                                             mail.text = mail.text.split("________________________________")[0]
+                                                            mail.text = mail.text.split("***REMOVED***")[0]
+                                                            // mail.text = mail.text.split(mail.text.indexOf(mail.text.includes(': >')))
                                                         }
-                                                        if (mail.text.includes("@gmail.com>:")) {
-                                                            mail.text = mail.text.splice()
-                                                        }
-                                                        connection.query('INSERT INTO log (ticket_id, message_from, message_text) VALUES (?, ?, ?)',[rows[0].id, mail.from.value[0].address, mail.text], (err, rows) => {
-                                                            connection.release(); 
+                                                        let temp = '';
+                                                        mail.textAsHtml = mail.textAsHtml.split('&')[0]
+                                                        temp = mail.textAsHtml.replace(/<[^>]+>/g, ' ');
+                                                        temp = temp.substring(1);
+                                                        temp = temp.replace(/\s+/g, ' ').trim()
+                                                        connection.query('INSERT INTO log (ticket_id, message_from, message_text) VALUES (?, ?, ?)',[rows[0].id, mail.from.value[0].address, temp], (err, rows) => {
+                                                            connection.release();
                                                             console.log("Added message to case")
                                                             if(err) {
                                                                 throw err
