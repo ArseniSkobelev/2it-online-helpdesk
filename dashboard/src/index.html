@@ -14,35 +14,41 @@
       <div id="messageArea">
         <div id="messageAreaContainer">
           <div id="titleCard">
-            <div class="flex-row">
-              <p id="email"></p>
-              <p id="status"></p>
-            </div>
             <h1 id="title"></h1>
             <p id="description"></p>
           </div>
           <div id="paddinBox">
             <ul id="messages">
             </ul>
-            <input type="text" id="messageBox" class="hidden">
+            <input type="text" id="messageBox">
           </div>
         </div>
       </div>
       <div id="rightMenu">
         <button onclick="Update()">Refresh</button>
-        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Facere doloremque blanditiis ducimus assumenda, cumque et magnam ea recusandae reprehenderit odio ullam tempora voluptas ipsam, numquam possimus! Officia voluptate hic sint?</p>
+        <div class="flex-row">
+          <div style="display: flex; flex-direction: row;">
+            <h1>Cum: </h1>
+            <p id="id"></p>
+          </div>
+          
+          <p id="status"></p>
+          <p id="name"></p>
+          <p id="tlf"></p>
+          <p id="email"></p>
+          <p id="date"></p>
+        </div>
       </div>
     </div>
   </body>
   <script>
     const { ipcRenderer } = require("electron")
 
-    let currentTicket
+    var currentTicket
     var checkIfOpen = []
 
     document.getElementById("messageBox").addEventListener("keydown", ()=>{
       if (event.keyCode === 13) {
-        console.log(currentTicket)
         ipcRenderer.send('sendMessage', {
           id: currentTicket.id, 
           message: document.getElementById("messageBox").value,
@@ -55,6 +61,9 @@
 
     ipcRenderer.send('indexLoaded')
     ipcRenderer.on("indexLoadedReply", (e, arg) => {
+      setTimeout(function () {
+        refreshMessages()
+      }, 100)
     })
     ipcRenderer.on("ticketsLoadedReply", (e, arg) => {
       var list = document.createElement("div");
@@ -62,6 +71,7 @@
       list.className = "Ticket"
       list.id = arg.id
       list.innerHTML = "Ticket " + arg.id + ": " + arg.title 
+      currentTicket = arg;
       list.onclick = function () {
         document.getElementById("messages").innerHTML=""
         ipcRenderer.send('loadMessages', this.id)
@@ -69,12 +79,15 @@
           document.getElementsByClassName("Ticket")[i].className = "Ticket"
         }
         this.className = "Ticket-dark Ticket"
-        document.getElementById("messageBox").className = "shown"
         currentTicket = arg;
         document.getElementById("title").innerText = ""
         document.getElementById("description").innerText = ""
-        document.getElementById("email").innerText = ""
-        document.getElementById("status").innerText = ""
+        document.getElementById("id").innerText = currentTicket.id
+        document.getElementById("status").innerText = currentTicket.status
+        document.getElementById("name").innerText = currentTicket.name
+        document.getElementById("tlf").innerText = currentTicket.phonenum
+        document.getElementById("email").innerText = currentTicket.from
+        document.getElementById("date").innerText = currentTicket.date
         gotoBottom("messages")
       };
       for (i in arg) {
@@ -83,11 +96,7 @@
         item.innerHTML = i + ": " + arg[i];
         list.appendChild(item);
       }
-      if (arg.status == "closed") {
-        // document.getElementById("TicketListClosed").appendChild(list);
-      }else {
         document.getElementById("ticketMenu").appendChild(list);
-      }
     })
     ipcRenderer.on("logLoadedReply", (e, arg) => {
       document.getElementById("title").innerText = arg.title
@@ -105,11 +114,18 @@
       }else{
         item.classList.add("recieved")
       }
-      item.innerHTML = '<div class="shown-list ' + arg.id + ' recieved"><h1>' + arg.from + '</h1><h6>' + arg.date.toUTCString().split(',')[0] + ' ' + arg.date.toUTCString().split(' ')[4].split(':')[0] + ':' + arg.date.toUTCString().split(' ')[4].split(':')[1] + '</h6>' +  '<p>' + arg.message + '</p></div>'
+      var tempTime = arg.date.toUTCString().split(' ')[4].split(':')[0][1]
+      tempTime = parseInt(tempTime) + 2
+      if (arg.date.toUTCString().split(' ')[4].split(':')[0][1] == 0 && tempTime > 24) {
+        tempTime = tempTime - 24
+        item.innerHTML = '<div class="shown-list ' + arg.id + ' recieved"><h1>' + arg.from + '</h1><h6>' + arg.date.toUTCString().split(',')[0] + ' ' + arg.date.toUTCString().split(' ')[4].split(':')[0][0] + tempTime + ':' + arg.date.toUTCString().split(' ')[4].split(':')[1] + '</h6>' +  '<p>' + arg.message + '</p></div>'
+      } else if (arg.date.toUTCString().split(' ')[4].split(':')[0][1] == 0){
+        item.innerHTML = '<div class="shown-list ' + arg.id + ' recieved"><h1>' + arg.from + '</h1><h6>' + arg.date.toUTCString().split(',')[0] + ' ' + arg.date.toUTCString().split(' ')[4].split(':')[1][0] + tempTime + ':' + arg.date.toUTCString().split(' ')[4].split(':')[1] + '</h6>' +  '<p>' + arg.message + '</p></div>'
+      } else {
+        item.innerHTML = '<div class="shown-list ' + arg.id + ' recieved"><h1>' + arg.from + '</h1><h6>' + arg.date.toUTCString().split(',')[0] + ' ' + tempTime + ':' + arg.date.toUTCString().split(' ')[4].split(':')[1] + '</h6>' +  '<p>' + arg.message + '</p></div>'
+      }
       document.getElementById("title").innerText = arg.title
       document.getElementById("description").innerText = arg.description
-      document.getElementById("email").innerText = arg.email
-      document.getElementById("status").innerText = arg.status
       midSection.appendChild(item);
       checkIfOpen.push(arg.id)
       checkIfOpen.push(arg.elements)
