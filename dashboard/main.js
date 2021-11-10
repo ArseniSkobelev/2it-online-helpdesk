@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, ipcRenderer } = require('electron');
 const path = require('path');
 const mysql = require('mysql');
 const { title } = require('process');
@@ -48,6 +48,12 @@ function createWindow () {
     })
 
     win.loadFile(`./src/login.html`)
+
+    ipcMain.on("reload", function (e) {
+        setTimeout(() => {
+            win.reload()
+        }, 10000);
+    })
 
     ipcMain.on("unauthenticated", (event) => {
         win.loadFile(`./src/login.html`)
@@ -155,6 +161,11 @@ function createWindow () {
                 connection.release();
                 if (rows.length>0) {
                     rows.forEach(element => {
+                        let temp = '';
+                        element.message_text = element.message_text.split('&')[0]
+                        temp = element.message_text.replace(/<[^>]+>/g, ' ');
+                        temp = temp.substring(1);
+                        temp = temp.replace(/\s+/g, ' ').trim()
                         e.sender.send("logLoadedReply", {
                             id: element.ticket_id,
                             from: element.message_from,
@@ -178,6 +189,85 @@ function createWindow () {
         });
     })
 }
+
+ipcMain.on("closeTicket", function(e, id){
+    pool.getConnection((err, connection) => {
+        if(err) throw err;
+        console.log('connected as id ' + connection.threadId);
+        connection.query("UPDATE messages SET status = 'closed' WHERE id = ?",[id], (err, rows) => {
+            if(err) throw err;
+            pool.getConnection((err, connection) => {
+                if(err) throw err;
+                console.log('connected as id ' + connection.threadId);
+                connection.query('SELECT * FROM messages WHERE status = "open"', (err, rows) => {
+                    if(err) throw err;
+                    rows.forEach(element => {
+                        e.sender.send("ticketsLoadedReply", {
+                            id: element.id, 
+                            from: element.email,
+                            title: element.title,
+                            message: element.message, 
+                            status: element.status,
+                            phonenum: element.phonenum,
+                            date: element.date,
+                            name: element.name
+                        })
+                    });
+                    connection.release();
+            })
+        });
+        })
+    });
+})
+
+ipcMain.on("refreshMessages", function(e, id) {
+    var title
+    var desc
+    var email
+    var status
+    pool.getConnection((err, connection) => {
+        if(err) throw err;
+        console.log('connected as id ' + connection.threadId);
+        connection.query('SELECT * FROM messages WHERE id = ?',[id], (err, rows) => {
+            if(err) throw err;
+            title = rows[0].title
+            desc = rows[0].message
+            email = rows[0].email
+            status = rows[0].status
+            console.log(rows)
+        })
+        connection.query('SELECT * FROM log WHERE ticket_id = ?',[id], (err, rows) => {
+            if(err) throw err;
+            connection.release();
+            if (rows.length>0) {
+                rows.forEach(element => {
+                    let temp = '';
+                    element.message_text = element.message_text.split('&')[0]
+                    temp = element.message_text.replace(/<[^>]+>/g, ' ');
+                    temp = temp.substring(1);
+                    temp = temp.replace(/\s+/g, ' ').trim()
+                    e.sender.send("logLoadedReply", {
+                        id: element.ticket_id,
+                        from: element.message_from,
+                        message: temp,
+                        date: element.date,
+                        elements: rows.length,
+                        title: title,
+                        description: desc,
+                        email: email,
+                        status: status
+                    })
+                });
+            } else {
+                e.sender.send("logLoadedReply", {
+                    id: 0,
+                    title: title,
+                    description: desc
+                }) 
+            }
+        })
+    });
+});
 
 app.whenReady().then(() => {
     createWindow();
