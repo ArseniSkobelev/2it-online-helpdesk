@@ -145,7 +145,8 @@ function updateTickets() {
                         pool.getConnection((err, connection) => {
                             if(err) throw err;
                             console.log('connected as id ' + connection.threadId);
-                            connection.query("SELECT * FROM log WHERE message_text = ?",[mail.text], (err, rows) => {
+                            connection.query("SELECT * FROM log WHERE message_text = ?",[mail.textAsHtml], (err, rows) => {
+                                if(err) throw err;
                                 connection.release(); 
                                 console.log("Checked matching for messages")
                                     if (rows.length == 0) {
@@ -169,12 +170,7 @@ function updateTickets() {
                                                             mail.text = mail.text.split("vg1im.alesundvgs@gmail.com")[0]
                                                             // mail.text = mail.text.split(mail.text.indexOf(mail.text.includes(': >')))
                                                         }
-                                                        let temp = '';
-                                                        mail.textAsHtml = mail.textAsHtml.split('&')[0]
-                                                        temp = mail.textAsHtml.replace(/<[^>]+>/g, ' ');
-                                                        temp = temp.substring(1);
-                                                        temp = temp.replace(/\s+/g, ' ').trim()
-                                                        connection.query('INSERT INTO log (ticket_id, message_from, message_text) VALUES (?, ?, ?)',[rows[0].id, mail.from.value[0].address, temp], (err, rows) => {
+                                                        connection.query('INSERT INTO log (ticket_id, message_from, message_text) VALUES (?, ?, ?)',[rows[0].id, mail.from.value[0].address, mail.textAsHtml], (err, rows) => {
                                                             connection.release();
                                                             console.log("Added message to case")
                                                             if(err) {
