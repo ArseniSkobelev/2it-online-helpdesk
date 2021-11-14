@@ -198,6 +198,7 @@ main {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    margin-bottom: 30px;
 }
 .loading-body{
     height: 100vh;
@@ -232,4 +233,28 @@ main {
     to {
         transform:rotate(360deg);
     }
+}
+
+#closeTicket {
+    text-transform: uppercase;
+    padding: 21px 44px;
+    background-color: #D16767;
+    color: white;
+}
+
+#right-title {
+    font-size: 25px;
+    font-weight: 700;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+#refreshMessages {
+    margin-left: 10px;
+}
+
+#refreshMessages > img {
+    width: 50%;
 }
