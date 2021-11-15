@@ -1,20 +1,33 @@
 {
-  "name": "dashboard",
+  "name": "HelpdeskDashboard",
   "version": "1.0.0",
   "description": "A dashboard made with Electron to answer support tickets",
   "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "electron ."
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "build": {
+    "asar": true,
+    "appId": "HelpdeskDashboard",
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "icon": "ico.ico",
+    "nsis": {
+      "oneClick": false,
+      "installerIcon": "ico.ico",
+      "license": "license.md",
+      "allowToChangeInstallationDirectory": "true"
+    }
   },
   "author": "ArseniSkobelev, NUB31",
   "license": "ISC",
-  "devDependencies": {
-    "electron": "^15.3.0"
-  },
   "dependencies": {
     "dotenv": "^10.0.0",
-    "electron-reload": "^2.0.0-alpha.1",
     "express": "^4.17.1",
     "imap-simple": "^5.1.0",
     "lodash": "^4.17.21",

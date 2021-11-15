@@ -1,4 +1,3 @@
-require('dotenv').config();
 const { app, BrowserWindow, ipcMain, ipcRenderer } = require('electron');
 const path = require('path');
 const mysql = require('mysql');
@@ -8,14 +7,9 @@ const nodemailer = require('nodemailer');
 var transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASSWORD
+      user: "",
+      pass: ""
     }
-});
-
-require('electron-reload')(__dirname, {
-    // Note that the path to electron may vary according to the main file
-    electron: require(`${__dirname}/node_modules/electron`)
 });
 
 let currentUser = {}
@@ -30,10 +24,10 @@ var mailTo = {
 
 
 const pool = mysql.createPool({
-    host     : process.env.DB_HOST,
-    user     : process.env.DB_USER,
-    password : process.env.DB_PASS,
-    database : process.env.DB_DATABASE
+    host     : "",
+    user     : "",
+    password : "",
+    database : ""
 });
 
 function createWindow () {
@@ -190,11 +184,11 @@ function createWindow () {
     })
 }
 
-ipcMain.on("closeTicket", function(e, id){
+ipcMain.on("closeTicket", function(e, obj){
     pool.getConnection((err, connection) => {
         if(err) throw err;
         console.log('connected as id ' + connection.threadId);
-        connection.query("UPDATE messages SET status = 'closed' WHERE id = ?",[id], (err, rows) => {
+        connection.query("UPDATE messages SET status = 'closed' WHERE id = ?",[obj.id], (err, rows) => {
             if(err) throw err;
             pool.getConnection((err, connection) => {
                 if(err) throw err;
@@ -214,6 +208,17 @@ ipcMain.on("closeTicket", function(e, id){
                         })
                     });
                     connection.release();
+            })
+            mailTo.text = "Ticket med id " + obj.id + " Har blitt stengt. Gå til helpdesk.avgs-ikt.com for å sende en ny."
+            mailTo.to = obj.email
+            console.log(mailTo)
+            transporter.sendMail(mailTo, function(error, info){
+                if (error) {
+                    console.log(error);
+                } else {
+                    console.log("Email sent: " + info.response);
+                    console.log(mailTo)
+                }
             })
         });
         })
