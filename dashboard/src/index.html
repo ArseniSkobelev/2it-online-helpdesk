@@ -159,7 +159,7 @@
         }
         console.log('Request sent');
       };
-      xhr.open('POST', 'http://localhost:3000/update');
+      xhr.open('POST', 'http://3.16.42.132:3000/update');
       xhr.send();
       document.body.innerHTML = ""
       document.body.className = "loading-body"
@@ -181,7 +181,7 @@
       element.scrollTop = element.scrollHeight - element.clientHeight;
     }
     function closeTicket() {
-      ipcRenderer.send("closeTicket", currentTicket.id)
+      ipcRenderer.send("closeTicket", {id: currentTicket.id, email: currentTicket.from})
       document.getElementById("flex-row").style.display = "none"
       refreshTickets()
       setTimeout(function (){
