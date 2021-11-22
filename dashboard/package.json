@@ -28,6 +28,7 @@
   "license": "ISC",
   "dependencies": {
     "dotenv": "^10.0.0",
+    "electron": "^16.0.1",
     "express": "^4.17.1",
     "imap-simple": "^5.1.0",
     "lodash": "^4.17.21",
