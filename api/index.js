@@ -6,6 +6,7 @@ const express = require('express')
 var imaps = require('imap-simple');
 const simpleParser = require('mailparser').simpleParser;
 const _ = require('lodash');
+var erp = require("node-email-reply-parser");
 const app = express()
 app.use(cors())
 const port = 3000
@@ -112,7 +113,7 @@ app.post('/update', function (req, res) {
 })
 
 updateTickets();
-setTimeout(updateTickets, 600000);
+setInterval(updateTickets, 10000)
 
 function updateTickets() {
     console.log("Searching through email")
@@ -151,18 +152,17 @@ function updateTickets() {
                                                     pool.getConnection((err, connection) => {
                                                         if(err) throw err;
                                                         console.log('connected as id ' + connection.threadId);
-                                                        if (mail.text.includes("vg1im.alesundvgs@gmail.com") && mail.text.includes("Fra:") && mail.text.includes("________________________________")) {
-                                                            mail.text = mail.text.split("________________________________")[0]
-                                                            mail.text = mail.text.split("vg1im.alesundvgs@gmail.com")[0]
-                                                            // mail.text = mail.text.split(mail.text.indexOf(mail.text.includes(': >')))
-                                                        }
-                                                        connection.query('INSERT INTO log (ticket_id, message_from, message_text) VALUES (?, ?, ?)',[rows[0].id, mail.from.value[0].address, mail.textAsHtml], (err, rows) => {
-                                                            connection.release();
-                                                            console.log("Added message to case")
-                                                            if(err) {
-                                                                throw err
-                                                            }
-                                                        });
+
+                                                        let mailTest = erp(mail.text, true);
+                                                        console.log(mailTest)
+
+                                                        // connection.query('INSERT INTO log (ticket_id, message_from, message_text) VALUES (?, ?, ?)',[rows[0].id, mail.from.value[0].address, mail.textAsHtml], (err, rows) => {
+                                                        //     connection.release();
+                                                        //     console.log("Added message to case")
+                                                        //     if(err) {
+                                                        //         throw err
+                                                        //     }
+                                                        // });
                                                     });  
                                                 } else{
                                                     console.log("Already in DB")

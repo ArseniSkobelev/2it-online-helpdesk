@@ -155,11 +155,6 @@ function createWindow () {
                 connection.release();
                 if (rows.length>0) {
                     rows.forEach(element => {
-                        let temp = '';
-                        element.message_text = element.message_text.split('&')[0]
-                        temp = element.message_text.replace(/<[^>]+>/g, ' ');
-                        temp = temp.substring(1);
-                        temp = temp.replace(/\s+/g, ' ').trim()
                         e.sender.send("logLoadedReply", {
                             id: element.ticket_id,
                             from: element.message_from,
