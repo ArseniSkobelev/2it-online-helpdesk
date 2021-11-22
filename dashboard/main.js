@@ -7,8 +7,8 @@ const nodemailer = require('nodemailer');
 var transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: "",
-      pass: ""
+      user: "***REMOVED***",
+      pass: "***REMOVED***1"
     }
 });
 
@@ -24,10 +24,10 @@ var mailTo = {
 
 
 const pool = mysql.createPool({
-    host     : "",
-    user     : "",
-    password : "",
-    database : ""
+    host     : "***REMOVED***",
+    user     : "***REMOVED***",
+    password : "***REMOVED***",
+    database : "***REMOVED***"
 });
 
 function createWindow () {

@@ -48,6 +48,7 @@ main {
     border-bottom-left-radius: 10px;
     width: 24%;
     padding: 50px 40px;
+    overflow: scroll;
 }
 
 #rightMenu {
@@ -170,6 +171,10 @@ main {
     display: none;
 }
 
+#ticketMenu::-webkit-scrollbar {
+    display: none;
+}
+
 #title::-webkit-scrollbar {
     display: none;
 }
@@ -257,4 +262,10 @@ main {
 
 #refreshMessages > img {
     width: 50%;
+}
+
+#closeTicketDiv {
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
