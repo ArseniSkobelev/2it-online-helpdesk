@@ -70,37 +70,19 @@ app.post('/form', function (req, res) {
             req.query.phonenum,
             req.query.avdeling
         ], (err, rows) => {
-            connection.release(); 
             // call email func
             if(err) {
                 res.status(500).send("Something went wrong with updating database")
                 throw err
             }
-            mailTo.to = req.query.email
             console.log('Database updated succsexfully');
-            setTimeout(function(){
-                send_email();
-            }, 10000);
-            res.status(200).send("Database updated succsexfully")
-        });
-    });    
-})
-
-app.post('/update', function (req, res) {
-    updateTickets();
-    res.status(200).send("Updated messages yes")
-})
-
-const send_email = async () => {
-    pool.getConnection((err, connection) => {
-        if(err) throw err;
-        console.log('connected as id ' + connection.threadId);
-        connection.query('SELECT * FROM messages WHERE id=(SELECT max(id) FROM messages LIMIT 1);', (err, rows) => {
-            connection.release(); 
+            
+            connection.query("SELECT * FROM messages WHERE message = ? LIMIT 1", [req.query.message], (err, rows) =>{
+                mailTo.to = req.query.email
                 mailFrom.subject = "Ticket submited with id #" + rows[0].id;
                 mailTo.subject = "Ticket submited with id #" + rows[0].id;
-                mailFrom.text = rows[0].message + "\n Check dashboard for more info";
-                mailTo.text = "Your message: " + rows[0].message;
+                mailFrom.text = req.query.message + "\n Check dashboard for more info";
+                mailTo.text = "Your message: " + req.query.message;
                 transporter.sendMail(mailFrom, function(error, info){
                     if (error) {
                         console.log(error);
@@ -117,13 +99,17 @@ const send_email = async () => {
                         console.log(mailTo)
                     }
                 });
-            if(err) {
-                res.status(500).send("Something went wrong with email service")
-                throw err
-            }
+            })
+            res.status(200).send("Database updated succsexfully")
+            connection.release(); 
         });
-    });
-}
+    });    
+})
+
+app.post('/update', function (req, res) {
+    updateTickets();
+    res.status(200).send("Updated messages yes")
+})
 
 updateTickets();
 setTimeout(updateTickets, 600000);
