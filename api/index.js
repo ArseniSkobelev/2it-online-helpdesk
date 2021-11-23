@@ -113,7 +113,7 @@ app.post('/update', function (req, res) {
 })
 
 updateTickets();
-setInterval(updateTickets, 2000)
+setInterval(updateTickets, 10000)
 
 function updateTickets() {
     console.log("Searching through email")
@@ -132,7 +132,8 @@ function updateTickets() {
                         pool.getConnection((err, connection) => {
                             if(err) throw err;
                             console.log('connected as id ' + connection.threadId);
-                            connection.query("SELECT * FROM log WHERE message_text = ?",[mail.textAsHtml], (err, rows) => {
+                            let mailTest = erp(mail.text, true);
+                            connection.query("SELECT * FROM log WHERE message_text = ?",[mailTest], (err, rows) => {
                                 if(err) throw err;
                                 connection.release(); 
                                 console.log("Checked matching for messages")
@@ -152,17 +153,14 @@ function updateTickets() {
                                                     pool.getConnection((err, connection) => {
                                                         if(err) throw err;
                                                         console.log('connected as id ' + connection.threadId);
-
                                                         let mailTest = erp(mail.text, true);
-                                                        console.log(mailTest)
-
-                                                        // connection.query('INSERT INTO log (ticket_id, message_from, message_text) VALUES (?, ?, ?)',[rows[0].id, mail.from.value[0].address, mail.textAsHtml], (err, rows) => {
-                                                        //     connection.release();
-                                                        //     console.log("Added message to case")
-                                                        //     if(err) {
-                                                        //         throw err
-                                                        //     }
-                                                        // });
+                                                        connection.query('INSERT INTO log (ticket_id, message_from, message_text) VALUES (?, ?, ?)',[rows[0].id, mail.from.value[0].address, mailTest], (err, rows) => {
+                                                            connection.release();
+                                                            console.log("Added message to case")
+                                                            if(err) {
+                                                                throw err
+                                                            }
+                                                        });
                                                     });  
                                                 } else{
                                                     console.log("Already in DB")
