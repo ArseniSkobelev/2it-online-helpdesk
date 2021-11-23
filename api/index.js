@@ -113,77 +113,78 @@ app.post('/update', function (req, res) {
 })
 
 updateTickets();
-setInterval(updateTickets, 10000)
+setInterval(updateTickets, 2000)
 
-imaps.connect(config).then(function (connection) {
-    function updateTickets() {
-        console.log("Searching through email")
-            return connection.openBox('INBOX').then(function () {
-                var searchCriteria = ['*'];
-                var fetchOptions = {
-                    bodies: ['HEADER', 'TEXT', ''],
-                };
-                return connection.search(searchCriteria, fetchOptions).then(function (messages) {
-                    messages.forEach(function (item) {
-                        var all = _.find(item.parts, { "which": "" })
-                        var id = item.attributes.uid;
-                        var idHeader = "Imap-Id: "+id+"\r\n";
-                        simpleParser(idHeader+all.body, (err, mail) => {
-                            pool.getConnection((err, connection) => {
+function updateTickets() {
+    console.log("Searching through email")
+    imaps.connect(config).then(function (connection) {
+        return connection.openBox('INBOX').then(function () {
+            var searchCriteria = ['*'];
+            var fetchOptions = {
+                bodies: ['HEADER', 'TEXT', ''],
+            };
+            return connection.search(searchCriteria, fetchOptions).then(function (messages) {
+                messages.forEach(function (item) {
+                    var all = _.find(item.parts, { "which": "" })
+                    var id = item.attributes.uid;
+                    var idHeader = "Imap-Id: "+id+"\r\n";
+                    simpleParser(idHeader+all.body, (err, mail) => {
+                        pool.getConnection((err, connection) => {
+                            if(err) throw err;
+                            console.log('connected as id ' + connection.threadId);
+                            connection.query("SELECT * FROM log WHERE message_text = ?",[mail.textAsHtml], (err, rows) => {
                                 if(err) throw err;
-                                console.log('connected as id ' + connection.threadId);
-                                connection.query("SELECT * FROM log WHERE message_text = ?",[mail.textAsHtml], (err, rows) => {
-                                    if(err) throw err;
-                                    connection.release(); 
-                                    console.log("Checked matching for messages")
-                                        if (rows.length == 0) {
-                                            console.log("Found a non matching message")
-                                            pool.getConnection((err, connection) => {
-                                                if(err) throw err;
-                                                console.log('connected as id ' + connection.threadId);
-                                                connection.query('SELECT id FROM messages WHERE email = ? ORDER BY id DESC',[mail.from.value[0].address], (err, rows) => {
-                                                    console.log(rows)
-                                                    connection.release(); 
-                                                    console.log("Searched for a previousely opened case with this email")
-                                                    if (rows.length != 0) {
-                                                        console.log("Not in DB")
-                                                        var id = rows[0].id
-                                                        console.log(id)
-                                                        pool.getConnection((err, connection) => {
-                                                            if(err) throw err;
-                                                            console.log('connected as id ' + connection.threadId);
+                                connection.release(); 
+                                console.log("Checked matching for messages")
+                                    if (rows.length == 0) {
+                                        console.log("Found a non matching message")
+                                        pool.getConnection((err, connection) => {
+                                            if(err) throw err;
+                                            console.log('connected as id ' + connection.threadId);
+                                            connection.query('SELECT id FROM messages WHERE email = ? ORDER BY id DESC',[mail.from.value[0].address], (err, rows) => {
+                                                console.log(rows)
+                                                connection.release(); 
+                                                console.log("Searched for a previousely opened case with this email")
+                                                if (rows.length != 0) {
+                                                    console.log("Not in DB")
+                                                    var id = rows[0].id
+                                                    console.log(id)
+                                                    pool.getConnection((err, connection) => {
+                                                        if(err) throw err;
+                                                        console.log('connected as id ' + connection.threadId);
 
-                                                            let mailTest = erp(mail.text, true);
-                                                            console.log(mailTest)
+                                                        let mailTest = erp(mail.text, true);
+                                                        console.log(mailTest)
 
-                                                            // connection.query('INSERT INTO log (ticket_id, message_from, message_text) VALUES (?, ?, ?)',[rows[0].id, mail.from.value[0].address, mail.textAsHtml], (err, rows) => {
-                                                            //     connection.release();
-                                                            //     console.log("Added message to case")
-                                                            //     if(err) {
-                                                            //         throw err
-                                                            //     }
-                                                            // });
-                                                        });  
-                                                    } else{
-                                                        console.log("Already in DB")
-                                                    }
-                                                    if(err) {
-                                                        throw err
-                                                    }
-                                                });
+                                                        // connection.query('INSERT INTO log (ticket_id, message_from, message_text) VALUES (?, ?, ?)',[rows[0].id, mail.from.value[0].address, mail.textAsHtml], (err, rows) => {
+                                                        //     connection.release();
+                                                        //     console.log("Added message to case")
+                                                        //     if(err) {
+                                                        //         throw err
+                                                        //     }
+                                                        // });
+                                                    });  
+                                                } else{
+                                                    console.log("Already in DB")
+                                                }
+                                                if(err) {
+                                                    throw err
+                                                }
                                             });
-                                        }
-                                    if(err) {
-                                        throw err
+                                        });
                                     }
-                                });
-                            }); 
-                        });
+                                if(err) {
+                                    throw err
+                                }
+                            });
+                        }); 
                     });
                 });
+                connection.end();
             });
-        }
-});
+        });
+    });
+}
 
 app.listen(port, () => {
     console.log(`listening at port: ${port}`)
