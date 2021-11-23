@@ -141,18 +141,6 @@
 
     function update() {
       ipcRenderer.send("reload")
-      var xhr = new XMLHttpRequest();
-      xhr.onreadystatechange = function () {
-        if (xhr.readyState !== 4) return;
-        if (xhr.status >= 200 && xhr.status < 300) {
-          console.log("success")
-        } else {
-          console.log("error in refreshing")
-        }
-        console.log('Request sent');
-      };
-      xhr.open('POST', 'http://3.16.42.132:3000/update');
-      xhr.send();
       document.body.innerHTML = ""
       document.body.className = "loading-body"
       let info = document.createElement("h1")
@@ -195,5 +183,10 @@
       document.getElementById("email").innerText = "E-mail: " + E.from
       document.getElementById("date").innerText = "Date: " + E.date.toUTCString().split('GMT')[0]
     }
+
+    setInterval(() => {
+      document.getElementById("messages").innerHTML = ""
+      ipcRenderer.send("UpdateMessageDB", currentTicket.id)
+    }, 10000);
   </script>
 </html>
