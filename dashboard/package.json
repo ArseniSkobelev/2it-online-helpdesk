@@ -1,6 +1,6 @@
 {
   "name": "HelpdeskDashboard",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A dashboard made with Electron to answer support tickets",
   "main": "main.js",
   "scripts": {
@@ -26,6 +26,10 @@
   },
   "author": "ArseniSkobelev, NUB31",
   "license": "ISC",
+  "devDependencies": {
+    "electron-builder": "^22.14.5",
+    "electron": "^16.0.1"
+  },
   "dependencies": {
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
