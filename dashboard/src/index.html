@@ -138,35 +138,6 @@
       gotoBottom()
     })
 
-    ipcRenderer.on("ticketsLoadedReply2", (e, arg) => {
-      if (!arg) {
-        return
-      }
-      var list = document.createElement("div");
-      list.setAttribute('id', 'ticketList')
-      list.className = "Ticket"
-      list.id = arg.id
-      list.innerHTML = "Ticket " + arg.id + ": " + arg.title 
-      setStatus(currentTicket)
-      list.onclick = function () {
-        document.getElementById("flex-row").style.display = "flex"
-        document.getElementById("messages").innerHTML=""
-        ipcRenderer.send('loadMessages', this.id)
-        for (let i = 0; i < document.getElementsByClassName("Ticket").length; i++) {
-          document.getElementsByClassName("Ticket")[i].className = "Ticket"
-        }
-        this.className = "Ticket-dark Ticket"
-        setStatus(currentTicket)
-      };
-      for (i in arg) {
-        let item = document.createElement("div");
-        item.classList.add('hidden')
-        item.innerHTML = i + ": " + arg[i];
-        list.appendChild(item);
-      }
-        document.getElementById("ticketMenu").appendChild(list);
-    })
-
     document.getElementById("messages").addEventListener("scroll", function () {
       if (element.scrollTop == element.scrollHeight - element.clientHeight) {
         document.getElementById("scrollToBottom").style.display = "none"
@@ -224,8 +195,6 @@
     }
 
     setInterval(() => {
-      document.getElementById("ticketMenu").innerHTML = ""
-      ipcRenderer.send("updateMessages")
       if (element.scrollTop == element.scrollHeight - element.clientHeight) {
         document.getElementById("messages").innerHTML = ""
         ipcRenderer.send("UpdateMessageDB", currentTicket.id)
