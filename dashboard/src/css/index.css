@@ -271,4 +271,13 @@ main {
 }
 #scrollToBottom{
     display: none;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    left: calc(50% - 22.5px);
+    bottom: 140px;
+}
+#scrollToBottom > i{
+    font-size: 45px;
+    cursor: pointer;
 }

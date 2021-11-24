@@ -7,8 +7,8 @@ const nodemailer = require('nodemailer');
 var transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: "***REMOVED***",
-      pass: "***REMOVED***"
+      user: "",
+      pass: ""
     }
 });
 
@@ -24,10 +24,10 @@ var mailTo = {
 
 
 const pool = mysql.createPool({
-    host     : "***REMOVED***",
-    user     : "***REMOVED***",
-    password : "***REMOVED***",
-    database : "***REMOVED***"
+    host     : "",
+    user     : "",
+    password : "",
+    database : ""
 });
 
 function createWindow () {
@@ -184,6 +184,7 @@ ipcMain.on("closeTicket", function(e, obj){
         if(err) throw err;
         console.log('connected as id ' + connection.threadId);
         connection.query("UPDATE messages SET status = 'closed' WHERE id = ?",[obj.id], (err, rows) => {
+            connection.release();
             if(err) throw err;
             pool.getConnection((err, connection) => {
                 if(err) throw err;
