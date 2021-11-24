@@ -269,3 +269,6 @@ main {
     justify-content: center;
     align-items: center;
 }
+#scrollToBottom{
+    display: none;
+}
