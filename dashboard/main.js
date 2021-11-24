@@ -308,29 +308,6 @@ ipcMain.on("UpdateMessageDB", function (e, id) {
     });  
 })
 
-ipcMain.on("updateMessages", function (e) {
-    pool.getConnection((err, connection) => {
-        if(err) throw err;
-        console.log('connected as id ' + connection.threadId);
-        connection.query('SELECT * FROM messages WHERE status = "open"', (err, rows) => {
-            if(err) throw err;
-            connection.release();
-            rows.forEach(element => {
-                e.sender.send("ticketsLoadedReply2", {
-                    id: element.id, 
-                    from: element.email,
-                    title: element.title,
-                    message: element.message, 
-                    status: element.status,
-                    phonenum: element.phonenum,
-                    date: element.date,
-                    name: element.name
-                })
-            });
-        })
-    });
-})
-
 app.whenReady().then(() => {
     createWindow();
 
