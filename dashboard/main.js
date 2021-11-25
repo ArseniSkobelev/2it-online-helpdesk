@@ -3,12 +3,13 @@ const path = require('path');
 const mysql = require('mysql');
 const { title } = require('process');
 const nodemailer = require('nodemailer');
+const dotenv = reqire('dotenv')
 
 var transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: "",
-      pass: ""
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASSWORD
     }
 });
 
@@ -24,10 +25,10 @@ var mailTo = {
 
 
 const pool = mysql.createPool({
-    host     : "",
-    user     : "",
-    password : "",
-    database : ""
+    host     : process.env.DB_HOST,
+    user     : process.env.DB_USER,
+    password : process.env.DB_PASS,
+    database : process.env.DB_DATABASE
 });
 
 function createWindow () {
