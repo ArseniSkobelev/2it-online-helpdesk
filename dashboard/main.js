@@ -3,7 +3,7 @@ const path = require('path');
 const mysql = require('mysql');
 const { title } = require('process');
 const nodemailer = require('nodemailer');
-const dotenv = require('dotenv')
+const dotenv = require('dotenv').config()
 
 var transporter = nodemailer.createTransport({
     service: 'gmail',
