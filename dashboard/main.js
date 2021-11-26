@@ -176,6 +176,7 @@ function createWindow () {
                             console.log(attachments)
                             e.sender.send("logLoadedReply", {
                                 id: element.ticket_id,
+                                logID: element.id,
                                 from: element.message_from,
                                 message: element.message_text,
                                 date: element.date,
@@ -285,71 +286,6 @@ ipcMain.on("refreshMessages", function(e, id) {
         })
     });
 });
-
-ipcMain.on("UpdateMessageDB", function (e, id) {
-    let title
-    let desc
-    let email
-    let status
-    pool.getConnection((err, connection) => {
-        if(err) throw err;
-        console.log('connected as id ' + connection.threadId);
-        connection.query('SELECT * FROM messages WHERE id = ?',[id], (err, rows) => {
-            if(err) throw err;
-            title = rows[0].title
-            desc = rows[0].message
-            email = rows[0].email
-            status = rows[0].status
-            console.log(rows)
-        })
-        connection.query('SELECT * FROM log WHERE ticket_id = ?',[id], (err, rows) => {
-            if(err) throw err;
-            if (rows.length>0) {
-                let OldRows = rows
-                let checkForAttachments = []
-                connection.query('SELECT * FROM attachments ', (err, rows) => {
-                    if(err) throw err;
-                    if (rows.length > 0) {
-                        for (let i = 0; i < rows.length; i++) {
-                            checkForAttachments.push({messageId: rows[i].log_id, path: rows[i].path})
-                        }
-                    }
-                    OldRows.forEach(element => {
-                        let attachments = []
-                        let message_id = element.id
-                        if (checkForAttachments.length > 0) {
-                            checkForAttachments.forEach(element => {
-                                if (element.messageId == message_id) {
-                                    attachments.push({messageId: element.messageId, path: element.path})
-                                }
-                            });
-                        }
-                        console.log(attachments)
-                        e.sender.send("logLoadedReply", {
-                            id: element.ticket_id,
-                            from: element.message_from,
-                            message: element.message_text,
-                            date: element.date,
-                            elements: rows.length,
-                            title: title,
-                            description: desc,
-                            email: email,
-                            status: status,
-                            attachments: attachments
-                        })
-                    });
-                })
-            } else {
-                e.sender.send("logLoadedReply", {
-                    id: 0,
-                    title: title,
-                    description: desc
-                }) 
-            }
-            connection.release();
-        })
-    });  
-})
 
 app.whenReady().then(() => {
     createWindow();
