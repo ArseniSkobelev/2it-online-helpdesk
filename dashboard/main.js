@@ -8,8 +8,8 @@ const dotenv = require('dotenv').config()
 var transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASSWORD
+      user: "",
+      pass: ""
     }
 });
 
@@ -25,10 +25,10 @@ var mailTo = {
 
 
 const pool = mysql.createPool({
-    host     : process.env.DB_HOST,
-    user     : process.env.DB_USER,
-    password : process.env.DB_PASS,
-    database : process.env.DB_DATABASE
+    host     : "",
+    user     : "",
+    password : "",
+    database : ""
 });
 
 function createWindow () {
