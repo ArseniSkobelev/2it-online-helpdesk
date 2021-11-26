@@ -1,4 +1,4 @@
 .env
 .fuckyou
 node_modules
-attachments/
+api/attachments/*
