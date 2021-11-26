@@ -129,7 +129,14 @@
       if (tempTime > 23) {
         tempTime = tempTime - 24
       } 
-      item.innerHTML = '<div class="shown-list ' + arg.id + ' recieved"><h1>' + arg.from + '</h1><h6>' + tempTime + '</h6>' +  '<p>' + arg.message + '</p></div>'
+      item.innerHTML = '<div class="shown-list ' + arg.id + ' recieved"><h1>' + arg.from + '</h1><h6>' + tempTime + '</h6>' +  '<p>' + arg.message + '</p>'
+      if (arg.attachments.length > 0) {
+        console.log(arg.attachments)
+        arg.attachments.forEach(element => {
+          item.innerHTML = item.innerHTML + "<img src='http://localhost:3000/attachments?attachment=" +  element.path + "'></img>"
+        });
+      }
+      item.innerHTML = item.innerHTML + "</div>"
       document.getElementById("title").innerText = arg.title
       document.getElementById("description").innerText = arg.description
       midSection.appendChild(item);

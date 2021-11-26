@@ -164,10 +164,11 @@ function updateTickets() {
                                                             if (mail.attachments.length > 0) {
                                                                 console.log("Added message to case")
                                                                 let filename
+                                                                let dbname
                                                                 mail.attachments.forEach(element => {
-                                                                    console.log(element.filename)
                                                                     let data = element.content;
-                                                                    filename = "./attachments/" + uuidv4() + element.filename
+                                                                    dbname = uuidv4() + element.filename
+                                                                    filename = "./attachments/" + dbname
                                                                     fs.writeFile(filename, data, function(err) {
                                                                         if(err) throw err;
                                                                         console.log("inserted attachments to path")
@@ -175,7 +176,7 @@ function updateTickets() {
                                                                     connection.query('SELECT id FROM log ORDER BY id DESC LIMIT 1', (err, rows) => {
                                                                         if(err) throw err;
                                                                         console.log("yes:" + rows[0].ticket_id)
-                                                                        connection.query('INSERT INTO attachments (log_id, path) VALUES (?, ?)',[rows[0].id, filename], (err, rows) => {
+                                                                        connection.query('INSERT INTO attachments (log_id, path) VALUES (?, ?)',[rows[0].id, dbname], (err, rows) => {
                                                                             if(err) throw err;
                                                                             console.log("inserted attachments to db")
                                                                         });

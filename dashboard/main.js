@@ -3,13 +3,14 @@ const path = require('path');
 const mysql = require('mysql');
 const { title } = require('process');
 const nodemailer = require('nodemailer');
+const { forEach } = require('lodash');
 const dotenv = require('dotenv').config()
 
 var transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: "",
-      pass: ""
+      user: "***REMOVED***",
+      pass: "***REMOVED***"
     }
 });
 
@@ -25,10 +26,10 @@ var mailTo = {
 
 
 const pool = mysql.createPool({
-    host     : "",
-    user     : "",
-    password : "",
-    database : ""
+    host     : "***REMOVED***",
+    user     : "***REMOVED***",
+    password : "***REMOVED***",
+    database : "***REMOVED***"
 });
 
 function createWindow () {
@@ -149,25 +150,44 @@ function createWindow () {
                 desc = rows[0].message
                 email = rows[0].email
                 status = rows[0].status
-                console.log(rows)
             })
             connection.query('SELECT * FROM log WHERE ticket_id = ?',[id], (err, rows) => {
                 if(err) throw err;
-                connection.release();
                 if (rows.length>0) {
-                    rows.forEach(element => {
-                        e.sender.send("logLoadedReply", {
-                            id: element.ticket_id,
-                            from: element.message_from,
-                            message: element.message_text,
-                            date: element.date,
-                            elements: rows.length,
-                            title: title,
-                            description: desc,
-                            email: email,
-                            status: status
-                        })
-                    });
+                    let OldRows = rows
+                    let checkForAttachments = []
+                    connection.query('SELECT * FROM attachments ', (err, rows) => {
+                        if(err) throw err;
+                        if (rows.length > 0) {
+                            for (let i = 0; i < rows.length; i++) {
+                                checkForAttachments.push({messageId: rows[i].log_id, path: rows[i].path})
+                            }
+                        }
+                        OldRows.forEach(element => {
+                            let attachments = []
+                            let message_id = element.id
+                            if (checkForAttachments.length > 0) {
+                                checkForAttachments.forEach(element => {
+                                    if (element.messageId == message_id) {
+                                        attachments.push({messageId: element.messageId, path: element.path})
+                                    }
+                                });
+                            }
+                            console.log(attachments)
+                            e.sender.send("logLoadedReply", {
+                                id: element.ticket_id,
+                                from: element.message_from,
+                                message: element.message_text,
+                                date: element.date,
+                                elements: rows.length,
+                                title: title,
+                                description: desc,
+                                email: email,
+                                status: status,
+                                attachments: attachments
+                            })
+                        });
+                    })
                 } else {
                     e.sender.send("logLoadedReply", {
                         id: 0,
@@ -175,6 +195,7 @@ function createWindow () {
                         description: desc
                     }) 
                 }
+                connection.release();
             })
         });
     })
@@ -283,21 +304,41 @@ ipcMain.on("UpdateMessageDB", function (e, id) {
         })
         connection.query('SELECT * FROM log WHERE ticket_id = ?',[id], (err, rows) => {
             if(err) throw err;
-            connection.release();
             if (rows.length>0) {
-                rows.forEach(element => {
-                    e.sender.send("logLoadedReply", {
-                        id: element.ticket_id,
-                        from: element.message_from,
-                        message: element.message_text,
-                        date: element.date,
-                        elements: rows.length,
-                        title: title,
-                        description: desc,
-                        email: email,
-                        status: status
-                    })
-                });
+                let OldRows = rows
+                let checkForAttachments = []
+                connection.query('SELECT * FROM attachments ', (err, rows) => {
+                    if(err) throw err;
+                    if (rows.length > 0) {
+                        for (let i = 0; i < rows.length; i++) {
+                            checkForAttachments.push({messageId: rows[i].log_id, path: rows[i].path})
+                        }
+                    }
+                    OldRows.forEach(element => {
+                        let attachments = []
+                        let message_id = element.id
+                        if (checkForAttachments.length > 0) {
+                            checkForAttachments.forEach(element => {
+                                if (element.messageId == message_id) {
+                                    attachments.push({messageId: element.messageId, path: element.path})
+                                }
+                            });
+                        }
+                        console.log(attachments)
+                        e.sender.send("logLoadedReply", {
+                            id: element.ticket_id,
+                            from: element.message_from,
+                            message: element.message_text,
+                            date: element.date,
+                            elements: rows.length,
+                            title: title,
+                            description: desc,
+                            email: email,
+                            status: status,
+                            attachments: attachments
+                        })
+                    });
+                })
             } else {
                 e.sender.send("logLoadedReply", {
                     id: 0,
@@ -305,6 +346,7 @@ ipcMain.on("UpdateMessageDB", function (e, id) {
                     description: desc
                 }) 
             }
+            connection.release();
         })
     });  
 })
