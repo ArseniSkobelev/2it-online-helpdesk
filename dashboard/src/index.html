@@ -4,11 +4,13 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" integrity="sha512-wnea99uKIC3TJF7v4eKk4Y+lMz2Mklv18+r4na2Gn1abDRPPOeef95xTzdwGD9e6zXJBteMIhZ1+68QC5byJZw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
         <meta charset="UTF-8">
         <title>Dashboard</title>
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
         <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css" integrity="sha384-AYmEC3Yw5cVb3ZcuHtOA93w35dYTsvhLPVnYs9eStHfGJvOvKxVfELGroGkvsg+p" crossorigin="anonymous"/>
         <link rel="stylesheet" href="./css/index.css">
   </head>
   <body>
+    <div id="bigImg" onclick="bigPic()">
+      <img id="img" >
+    </div>
     <div id="form-container">
       <div id="ticketMenu">
       </div>
@@ -50,6 +52,7 @@
         </div>
     </div>
   </body>
+  <script src="./js/wheelzoom.js"></script>
   <script>
     const { ipcRenderer } = require("electron")
     
@@ -129,17 +132,19 @@
       if (tempTime > 23) {
         tempTime = tempTime - 24
       } 
-      item.innerHTML = '<div class="shown-list ' + arg.id + ' recieved"><h1>' + arg.from + '</h1><h6>' + tempTime + '</h6>' +  '<p>' + arg.message + '</p>'
-      if (arg.attachments.length > 0) {
-        console.log(arg.attachments)
-        arg.attachments.forEach(element => {
-          item.innerHTML = item.innerHTML + "<img src='http://localhost:3000/attachments?attachment=" +  element.path + "'></img>"
+      item.innerHTML = '<div id="' + arg.logID +'" class="shown-list ' + arg.id + ' recieved"><h1>' + arg.from + '</h1><h6>' + tempTime + '</h6>' +  '<p>' + arg.message + '</p></div>'
+      midSection.appendChild(item);
+      let itemDiv = document.getElementById(arg.logID)
+      console.log(itemDiv)
+        if (arg.attachments.length > 0) {
+          arg.attachments.forEach(element => {
+          itemDiv.innerHTML += "<img class='imageInBox' onclick='bigPic(this)' src='http://13.51.163.75:3000/attachments?attachment=" +  element.path + "'></img>"
         });
-      }
-      item.innerHTML = item.innerHTML + "</div>"
+      } 
+      console.log("made link")
+      console.log(item.innerHTML)
       document.getElementById("title").innerText = arg.title
       document.getElementById("description").innerText = arg.description
-      midSection.appendChild(item);
       checkIfOpen.push(arg.id)
       checkIfOpen.push(arg.elements)
       gotoBottom()
@@ -155,6 +160,20 @@
     document.getElementById("scrollToBottom").addEventListener("click", function () {
       gotoBottom()
     })
+    
+    wheelzoom(document.querySelectorAll('img'));
+
+    var clicked = false
+    function bigPic(arg) {
+      if (clicked == false) {
+        document.getElementById("bigImg").style.cssText = "display: flex; width: 100vw; height: 100vh; align-items: center; justify-content: center; z-index: 1;"
+        document.getElementById("img").setAttribute("src", arg.src)
+        clicked = true
+      } else {
+        document.getElementById("bigImg").style.cssText = "display: none;"
+        clicked = false
+      }
+    }
 
     function update() {
       ipcRenderer.send("reload")
@@ -204,7 +223,7 @@
     setInterval(() => {
       if (element.scrollTop == element.scrollHeight - element.clientHeight) {
         document.getElementById("messages").innerHTML = ""
-        ipcRenderer.send("UpdateMessageDB", currentTicket.id)
+        ipcRenderer.send("loadMessages", currentTicket.id)
       }
     }, 10000);
   </script>
