@@ -1,12 +1,14 @@
 require('dotenv').config()
 const nodemailer = require('nodemailer');
 const mysql = require('mysql');
+const fs = require('fs');
 const cors = require('cors')
 const express = require('express')
-var imaps = require('imap-simple');
+const imaps = require('imap-simple');
 const simpleParser = require('mailparser').simpleParser;
 const _ = require('lodash');
-var erp = require("node-email-reply-parser");
+const erp = require("node-email-reply-parser");
+const { v4: uuidv4 } = require('uuid');
 const app = express()
 app.use(cors())
 const port = 3000
@@ -15,8 +17,14 @@ if ("development" == app.get("env")) {
     process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 }
 
+app.use(express.static('attachments'))
+
 const { json } = require('express');
 const { cond } = require('lodash');
+
+app.get("/attachments", (req, res) =>{
+    res.sendFile(__dirname + "/attachments/" + req.query.attachment)
+})
 
 const pool = mysql.createPool({
     host     : process.env.DB_HOST,
@@ -148,20 +156,38 @@ function updateTickets() {
                                                 console.log("Searched for a previousely opened case with this email")
                                                 if (rows.length != 0) {
                                                     console.log("Not in DB")
-                                                    var id = rows[0].id
-                                                    console.log(id)
                                                     pool.getConnection((err, connection) => {
                                                         if(err) throw err;
                                                         console.log('connected as id ' + connection.threadId);
                                                         let mailTest = erp(mail.text, true);
                                                         connection.query('INSERT INTO log (ticket_id, message_from, message_text) VALUES (?, ?, ?)',[rows[0].id, mail.from.value[0].address, mailTest], (err, rows) => {
-                                                            connection.release();
-                                                            console.log("Added message to case")
+                                                            if (mail.attachments.length > 0) {
+                                                                console.log("Added message to case")
+                                                                let filename
+                                                                mail.attachments.forEach(element => {
+                                                                    console.log(element.filename)
+                                                                    let data = element.content;
+                                                                    filename = "./attachments/" + uuidv4() + element.filename
+                                                                    fs.writeFile(filename, data, function(err) {
+                                                                        if(err) throw err;
+                                                                        console.log("inserted attachments to path")
+                                                                    })
+                                                                    connection.query('SELECT id FROM log ORDER BY id DESC LIMIT 1', (err, rows) => {
+                                                                        if(err) throw err;
+                                                                        console.log("yes:" + rows[0].ticket_id)
+                                                                        connection.query('INSERT INTO attachments (log_id, path) VALUES (?, ?)',[rows[0].id, filename], (err, rows) => {
+                                                                            if(err) throw err;
+                                                                            console.log("inserted attachments to db")
+                                                                        });
+                                                                    })
+                                                                })
+                                                            }
                                                             if(err) {
                                                                 throw err
                                                             }
                                                         });
-                                                    });  
+                                                        connection.release();
+                                                    });
                                                 } else{
                                                     console.log("Already in DB")
                                                 }
