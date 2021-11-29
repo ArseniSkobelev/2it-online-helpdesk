@@ -5,6 +5,7 @@ const { title } = require('process');
 const nodemailer = require('nodemailer');
 const { forEach } = require('lodash');
 const dotenv = require('dotenv').config()
+var cloudinary = require('cloudinary').v2;
 
 var transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -16,12 +17,25 @@ var transporter = nodemailer.createTransport({
 
 let currentUser = {}
 
+cloudinary.config({ 
+    cloud_name: '***REMOVED***', 
+    api_key: '***REMOVED***', 
+    api_secret: '***REMOVED***',
+    secure: true
+});
+
 var mailTo = {
     from: 'helpdesk-bot@avgs-ikt.com',
     to: '',
     subject: '',
     text: '',
-    encoding: 'base64'
+    encoding: 'base64',
+    attachments: [
+        {
+            filename: "",
+            content: ""
+        }
+    ]
 };
 
 
@@ -116,24 +130,44 @@ function createWindow () {
         });
     })
     ipcMain.on("sendMessage", function(e, obj) {
+        
         pool.getConnection((err, connection) => {
             if(err) throw err;
             console.log('connected as id ' + connection.threadId);
             connection.query('INSERT INTO log (ticket_id, message_from, message_text) VALUES (?, ?, ?)',[obj.id, '***REMOVED***', obj.message], (err, rows) => {
                 if(err) throw err;
+                if (obj.path.length > 0) {
+                    imgArray = []
+                    obj.path.forEach(element => {
+                        cloudinary.uploader.upload(element, function(error, result) {
+                            imgArray.push(result.url)
+                            if(error) throw error;
+                            connection.query('SELECT id FROM log ORDER BY id DESC LIMIT 1', (err, rows) => {
+                                if(err) throw err;
+                                connection.query('INSERT INTO attachments (log_id, path) VALUES (?, ?)',[rows[0].id, result.url], (err, rows) => {
+                                    if(err) throw err;
+                                    console.log("inserted attachments to db")
+                                });
+                            })
+                        });
+                        mailTo.text = obj.message
+                        mailTo.to = obj.email
+                        if (imgArray.length > 0) {
+                            imgArray.forEach(element => {
+                                mailTo.text += "\n" + element
+                            });
+                        } 
+                        transporter.sendMail(mailTo, function(error, info){
+                            if (error) {
+                                console.log(error);
+                            } else {
+                                console.log("Email sent: " + info.response);
+                            }
+                        });
+                    });
+                }
                 connection.release();
             })
-        });
-        mailTo.text = obj.message
-        mailTo.to = obj.email
-        console.log(mailTo)
-        transporter.sendMail(mailTo, function(error, info){
-            if (error) {
-                console.log(error);
-            } else {
-                console.log("Email sent: " + info.response);
-                console.log(mailTo)
-            }
         });
     })
     ipcMain.on("loadMessages", function(e, id){
@@ -173,7 +207,6 @@ function createWindow () {
                                     }
                                 });
                             }
-                            console.log(attachments)
                             e.sender.send("logLoadedReply", {
                                 id: element.ticket_id,
                                 logID: element.id,
@@ -230,13 +263,11 @@ ipcMain.on("closeTicket", function(e, obj){
             })
             mailTo.text = "Ticket med id " + obj.id + " Har blitt stengt. Gå til helpdesk.avgs-ikt.com for å sende en ny."
             mailTo.to = obj.email
-            console.log(mailTo)
             transporter.sendMail(mailTo, function(error, info){
                 if (error) {
                     console.log(error);
                 } else {
                     console.log("Email sent: " + info.response);
-                    console.log(mailTo)
                 }
             })
         });
