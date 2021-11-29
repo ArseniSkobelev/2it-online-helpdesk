@@ -24,7 +24,17 @@
             <ul id="messages">
             </ul>
             <p id="scrollToBottom"><i class="fas fa-arrow-circle-down"></i></p>
-            <input type="text" id="messageBox">
+            <div class="messageBarAndAttchment">
+              <input type="text" id="messageBox">
+              <div>
+                <form enctype="multipart/form-data">
+                  <input id="files" type="file" class="hidden">
+                  <label for="files">
+                    <i class="fas fa-paperclip"></i>
+                  </label>
+                </form>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -59,16 +69,27 @@
     var canBeDone = true
     var currentTicket
     var checkIfOpen = []
-    let element = document.getElementById("messages");
+    var element = document.getElementById("messages");
+    var attachmentsArray = []
+
+    document.getElementById("files").onchange = function(e) { 
+      if(document.getElementById("files").files[0].path){
+        attachmentsArray.push(document.getElementById("files").files[0].path)
+        console.log(attachmentsArray)
+      }
+    };
 
     document.getElementById("messageBox").addEventListener("keydown", ()=>{
       if (event.keyCode === 13) {
+        event.preventDefault()
         ipcRenderer.send('sendMessage', {
-          id: currentTicket.id, 
-          message: document.getElementById("messageBox").value,
-          email: currentTicket.from
-        })
+            id: currentTicket.id, 
+            message: document.getElementById("messageBox").value,
+            email: currentTicket.from,
+            path: attachmentsArray
+          })
         document.getElementById("messageBox").value = ""
+        attachmentsArray = []
         refreshMessages()
       }
     })
@@ -135,14 +156,11 @@
       item.innerHTML = '<div id="' + arg.logID +'" class="shown-list ' + arg.id + ' recieved"><h1>' + arg.from + '</h1><h6>' + tempTime + '</h6>' +  '<p>' + arg.message + '</p></div>'
       midSection.appendChild(item);
       let itemDiv = document.getElementById(arg.logID)
-      console.log(itemDiv)
         if (arg.attachments.length > 0) {
           arg.attachments.forEach(element => {
-          itemDiv.innerHTML += "<img class='imageInBox' onclick='bigPic(this)' src='http://13.51.163.75:3000/attachments?attachment=" +  element.path + "'></img>"
+          itemDiv.innerHTML += "<img class='imageInBox' onclick='bigPic(this)' src='" + element.path + "'></img>"
         });
       } 
-      console.log("made link")
-      console.log(item.innerHTML)
       document.getElementById("title").innerText = arg.title
       document.getElementById("description").innerText = arg.description
       checkIfOpen.push(arg.id)

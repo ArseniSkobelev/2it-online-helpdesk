@@ -9,6 +9,7 @@ const simpleParser = require('mailparser').simpleParser;
 const _ = require('lodash');
 const erp = require("node-email-reply-parser");
 const { v4: uuidv4 } = require('uuid');
+var cloudinary = require('cloudinary').v2;
 const app = express()
 app.use(cors())
 const port = 3000
@@ -25,6 +26,13 @@ const { cond } = require('lodash');
 app.get("/attachments", (req, res) =>{
     res.sendFile(__dirname + "/attachments/" + req.query.attachment)
 })
+
+cloudinary.config({ 
+    cloud_name: process.env.CLOUDINARY_NAME, 
+    api_key: process.env.CLOUDINARY_KEY, 
+    api_secret: process.env.CLOUDINARY_SECRET,
+    secure: true
+});
 
 const pool = mysql.createPool({
     host     : process.env.DB_HOST,
@@ -64,6 +72,13 @@ var mailTo = {
     to: 'vg1im.alesundvgs@gmail.com',
     subject: 'New support ticket submitted with id',
     text: '',
+    encoding: 'base64'
+};
+var respondFile = {
+    from: 'helpdesk-bot@avgs-ikt.com',
+    to: '',
+    subject: 'Filtype ikkje støttet',
+    text: 'Filtypen du sendte er ikkje støttet. Vennligst send som png, jpg, jpeg eller gif',
     encoding: 'base64'
 };
   
@@ -150,8 +165,10 @@ function updateTickets() {
                                         pool.getConnection((err, connection) => {
                                             if(err) throw err;
                                             console.log('connected as id ' + connection.threadId);
-                                            connection.query('SELECT id FROM messages WHERE email = ? ORDER BY id DESC',[mail.from.value[0].address], (err, rows) => {
-                                                console.log(rows)
+                                            connection.query('SELECT * FROM messages WHERE email = ? ORDER BY id DESC',[mail.from.value[0].address], (err, rows) => {
+                                                if (rows.length > 0) {
+                                                    var email = rows[0].email
+                                                }
                                                 connection.release(); 
                                                 console.log("Searched for a previousely opened case with this email")
                                                 if (rows.length != 0) {
@@ -163,24 +180,37 @@ function updateTickets() {
                                                         connection.query('INSERT INTO log (ticket_id, message_from, message_text) VALUES (?, ?, ?)',[rows[0].id, mail.from.value[0].address, mailTest], (err, rows) => {
                                                             if (mail.attachments.length > 0) {
                                                                 console.log("Added message to case")
-                                                                let filename
-                                                                let dbname
                                                                 mail.attachments.forEach(element => {
-                                                                    let data = element.content;
-                                                                    dbname = uuidv4() + element.filename
-                                                                    filename = "./attachments/" + dbname
-                                                                    fs.writeFile(filename, data, function(err) {
-                                                                        if(err) throw err;
-                                                                        console.log("inserted attachments to path")
-                                                                    })
-                                                                    connection.query('SELECT id FROM log ORDER BY id DESC LIMIT 1', (err, rows) => {
-                                                                        if(err) throw err;
-                                                                        console.log("yes:" + rows[0].ticket_id)
-                                                                        connection.query('INSERT INTO attachments (log_id, path) VALUES (?, ?)',[rows[0].id, dbname], (err, rows) => {
+                                                                    console.log(element)
+                                                                    if (element.contentType.includes("image/")) {
+                                                                        fs.writeFile("./attachments/" + element.filename, element.content, function(err) {
                                                                             if(err) throw err;
-                                                                            console.log("inserted attachments to db")
+                                                                            cloudinary.uploader.upload("./attachments/" + element.filename, function(error, result) {
+                                                                                if(error) throw error;
+                                                                                connection.query('SELECT id FROM log ORDER BY id DESC LIMIT 1', (err, rows) => {
+                                                                                    if(err) throw err;
+                                                                                    console.log("yes:" + rows[0].id)
+                                                                                    connection.query('INSERT INTO attachments (log_id, path) VALUES (?, ?)',[rows[0].id, result.url], (err, rows) => {
+                                                                                        if(err) throw err;
+                                                                                        console.log("inserted attachments to db")
+                                                                                    });
+                                                                                })
+                                                                                fs.unlink("./attachments/" + element.filename, () => {
+                                                                                    console.log("succsucc")
+                                                                                })
+                                                                            });
+                                                                        })
+                                                                    } else {
+                                                                        respondFile.to = email
+                                                                        transporter.sendMail(respondFile, function(error, info){
+                                                                            if (error) {
+                                                                                console.log(error);
+                                                                            } else {
+                                                                                console.log("Email sent: " + info.response);
+                                                                                console.log(mailFrom)
+                                                                            }
                                                                         });
-                                                                    })
+                                                                    }
                                                                 })
                                                             }
                                                             if(err) {
