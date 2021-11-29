@@ -5,7 +5,8 @@ const { title } = require('process');
 const nodemailer = require('nodemailer');
 const { forEach } = require('lodash');
 const dotenv = require('dotenv').config()
-var cloudinary = require('cloudinary').v2;
+const request = require('request').defaults({ encoding: null });
+const cloudinary = require('cloudinary').v2;
 
 var transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -30,12 +31,7 @@ var mailTo = {
     subject: '',
     text: '',
     encoding: 'base64',
-    attachments: [
-        {
-            filename: "",
-            content: ""
-        }
-    ]
+    attachments: []
 };
 
 
@@ -138,33 +134,49 @@ function createWindow () {
                 if(err) throw err;
                 if (obj.path.length > 0) {
                     imgArray = []
-                    obj.path.forEach(element => {
-                        cloudinary.uploader.upload(element, function(error, result) {
-                            imgArray.push(result.url)
-                            if(error) throw error;
-                            connection.query('SELECT id FROM log ORDER BY id DESC LIMIT 1', (err, rows) => {
-                                if(err) throw err;
-                                connection.query('INSERT INTO attachments (log_id, path) VALUES (?, ?)',[rows[0].id, result.url], (err, rows) => {
+                    var bar = new Promise((resolve, reject) => {
+                        obj.path.forEach((element, index, array) => {
+                            cloudinary.uploader.upload(element, function(error, result) {
+                                imgArray.push(result.url)
+                                if(error) throw error;
+                                connection.query('SELECT id FROM log ORDER BY id DESC LIMIT 1', (err, rows) => {
                                     if(err) throw err;
-                                    console.log("inserted attachments to db")
-                                });
-                            })
-                        });
-                        mailTo.text = obj.message
-                        mailTo.to = obj.email
-                        if (imgArray.length > 0) {
-                            imgArray.forEach(element => {
-                                mailTo.text += "\n" + element
+                                    connection.query('INSERT INTO attachments (log_id, path) VALUES (?, ?)',[rows[0].id, result.url], (err, rows) => {
+                                        if(err) throw err;
+                                        console.log("inserted attachments to db")
+                                        if (index === array.length -1) resolve();
+                                    });
+                                })
                             });
-                        } 
-                        transporter.sendMail(mailTo, function(error, info){
-                            if (error) {
-                                console.log(error);
-                            } else {
-                                console.log("Email sent: " + info.response);
-                            }
                         });
                     });
+                    bar.then(() => {
+                        mailTo.text = obj.message
+                        mailTo.to = obj.email
+                        attachmentsArray = []
+                        if (imgArray.length > 0) {
+                            var far = new Promise((resolve, reject) => {
+                                imgArray.forEach((element, index, array) => {
+                                    request.get(element, function (error, response, body) {
+                                        if (!error && response.statusCode == 200) {
+                                            attachmentsArray.push({filename: body.original_filename + body.format, content: Buffer.from(body)})
+                                            if (index === array.length -1) resolve();
+                                        }
+                                    });
+                                });
+                            })
+                        } 
+                        far.then(() => {
+                            mailTo.attachments = attachmentsArray
+                            transporter.sendMail(mailTo, function(error, info){
+                                if (error) {
+                                    console.log(error);
+                                } else {
+                                    console.log("Email sent: " + info.response);
+                                }
+                            });
+                        })
+                    })
                 }
                 connection.release();
             })
