@@ -158,8 +158,9 @@ function createWindow () {
                             var far = new Promise((resolve, reject) => {
                                 imgArray.forEach((element, index, array) => {
                                     request.get(element, function (error, response, body) {
+                                        var fileName = element.split("/").pop()
                                         if (!error && response.statusCode == 200) {
-                                            attachmentsArray.push({filename: body.original_filename + body.format, content: Buffer.from(body)})
+                                            attachmentsArray.push({filename: fileName, content: Buffer.from(body)})
                                             if (index === array.length -1) resolve();
                                         }
                                     });
