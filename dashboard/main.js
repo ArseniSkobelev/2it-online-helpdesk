@@ -130,7 +130,7 @@ function createWindow () {
         pool.getConnection((err, connection) => {
             if(err) throw err;
             console.log('connected as id ' + connection.threadId);
-            connection.query('INSERT INTO log (ticket_id, message_from, message_text) VALUES (?, ?, ?)',[obj.id, 'vg1im.alesundvgs@gmail.com', obj.message], (err, rows) => {
+            connection.query('INSERT INTO log (ticket_id, message_from, message_text, status) VALUES (?, ?, ?)',[obj.id, 'vg1im.alesundvgs@gmail.com', obj.message, 'read'], (err, rows) => {
                 if(err) throw err;
                 if (obj.path.length > 0) {
                     imgArray = []
@@ -201,40 +201,44 @@ function createWindow () {
             connection.query('SELECT * FROM log WHERE ticket_id = ?',[id], (err, rows) => {
                 if(err) throw err;
                 if (rows.length>0) {
-                    let OldRows = rows
-                    let checkForAttachments = []
-                    connection.query('SELECT * FROM attachments ', (err, rows) => {
-                        if(err) throw err;
-                        if (rows.length > 0) {
-                            for (let i = 0; i < rows.length; i++) {
-                                checkForAttachments.push({messageId: rows[i].log_id, path: rows[i].path})
+                        let OldRows = rows
+                        let checkForAttachments = []
+                        connection.query('SELECT * FROM attachments ', (err, rows) => {
+                            if(err) throw err;
+                            if (rows.length > 0) {
+                                for (let i = 0; i < rows.length; i++) {
+                                    checkForAttachments.push({messageId: rows[i].log_id, path: rows[i].path})
+                                }
                             }
-                        }
-                        OldRows.forEach(element => {
-                            let attachments = []
-                            let message_id = element.id
-                            if (checkForAttachments.length > 0) {
-                                checkForAttachments.forEach(element => {
-                                    if (element.messageId == message_id) {
-                                        attachments.push({messageId: element.messageId, path: element.path})
-                                    }
-                                });
-                            }
-                            e.sender.send("logLoadedReply", {
-                                id: element.ticket_id,
-                                logID: element.id,
-                                from: element.message_from,
-                                message: element.message_text,
-                                date: element.date,
-                                elements: rows.length,
-                                title: title,
-                                description: desc,
-                                email: email,
-                                status: status,
-                                attachments: attachments
-                            })
-                        });
-                    })
+                            OldRows.forEach(element => {
+                                let attachments = []
+                                let message_id = element.id
+                                if (checkForAttachments.length > 0) {
+                                    checkForAttachments.forEach(element => {
+                                        if (element.messageId == message_id) {
+                                            attachments.push({messageId: element.messageId, path: element.path})
+                                        }
+                                    });
+                                }
+                                e.sender.send("logLoadedReply", {
+                                    id: element.ticket_id,
+                                    logID: element.id,
+                                    from: element.message_from,
+                                    message: element.message_text,
+                                    date: element.date,
+                                    elements: rows.length,
+                                    title: title,
+                                    description: desc,
+                                    email: email,
+                                    status: status,
+                                    attachments: attachments,
+                                    log_status: element.status
+                                })
+                                connection.query("UPDATE log SET status = 'read' WHERE ticket_id = ? AND status = 'unread'",[id], (err, rows) => {
+                                    if(err) throw err;
+                                })
+                            });
+                        })
                 } else {
                     e.sender.send("logLoadedReply", {
                         id: 0,

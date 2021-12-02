@@ -133,6 +133,7 @@
         document.getElementById("ticketMenu").appendChild(list);
     })
     ipcRenderer.on("logLoadedReply", (e, arg) => {
+      console.log(arg.log_status)
       document.getElementById("title").innerText = arg.title
       document.getElementById("description").innerText = arg.description
       if (arg.id == 0) {
@@ -148,6 +149,7 @@
       }else{
         item.classList.add("recieved")
       }
+      item.classList.add(arg.log_status)
       let tempTime = arg.date.toUTCString()
       tempTime = parseInt(tempTime.split(" ")[4].split(":")[0]) + 2 + ":" + tempTime.split(" ")[4].split(":")[1]
       if (tempTime > 23) {
