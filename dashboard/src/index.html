@@ -106,7 +106,12 @@
       }
       var list = document.createElement("div");
       list.setAttribute('id', 'ticketList')
-      list.className = "Ticket"
+      console.log(arg.log_status)
+      if (arg.log_status == "unread") {
+        list.className = "ticket_unread"
+        console.log("yesdaddy")
+      }
+      list.classList.add("Ticket") 
       list.id = arg.id
       list.innerHTML = "Ticket " + arg.id + ": " + arg.title 
       currentTicket = arg;
@@ -133,7 +138,6 @@
         document.getElementById("ticketMenu").appendChild(list);
     })
     ipcRenderer.on("logLoadedReply", (e, arg) => {
-      console.log(arg.log_status)
       document.getElementById("title").innerText = arg.title
       document.getElementById("description").innerText = arg.description
       if (arg.id == 0) {
@@ -152,7 +156,7 @@
       item.classList.add(arg.log_status)
       let tempTime = arg.date.toUTCString()
       tempTime = parseInt(tempTime.split(" ")[4].split(":")[0]) + 2 + ":" + tempTime.split(" ")[4].split(":")[1]
-      if (tempTime > 23) {
+      if (tempTime > 23) { 
         tempTime = tempTime - 24
       } 
       item.innerHTML = '<div id="' + arg.logID +'" class="shown-list ' + arg.id + ' recieved"><h1>' + arg.from + '</h1><h6>' + tempTime + '</h6>' +  '<p>' + arg.message + '</p></div>'
