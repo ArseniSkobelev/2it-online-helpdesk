@@ -310,3 +310,6 @@ main {
     align-items: center;
     justify-content: center;
 }
+.unread div p{
+    color: red;
+}
