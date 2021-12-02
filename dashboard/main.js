@@ -7,6 +7,7 @@ const { forEach } = require('lodash');
 const dotenv = require('dotenv').config()
 const request = require('request').defaults({ encoding: null });
 const cloudinary = require('cloudinary').v2;
+const { stat } = require('fs');
 
 var transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -100,7 +101,7 @@ function createWindow () {
         pool.getConnection((err, connection) => {
             if(err) throw err;
             console.log('connected as id ' + connection.threadId);
-            connection.query('SELECT * FROM users WHERE username=?',[user], (err, rows) => {
+            connection.query('SELECT * FROM users WHERE username=?',[user], (err, rows) => {                
                 connection.release();
             })
         });
@@ -109,19 +110,26 @@ function createWindow () {
             console.log('connected as id ' + connection.threadId);
             connection.query('SELECT * FROM messages WHERE status = "open"', (err, rows) => {
                 if(err) throw err;
-                connection.release();
                 rows.forEach(element => {
-                    e.sender.send("ticketsLoadedReply", {
-                        id: element.id, 
-                        from: element.email,
-                        title: element.title,
-                        message: element.message, 
-                        status: element.status,
-                        phonenum: element.phonenum,
-                        date: element.date,
-                        name: element.name
-                    })
+                    var status = ""
+                    connection.query('SELECT status FROM log WHERE ticket_id = ? ORDER BY id DESC limit 1',[element.id], (err, rows) => {
+                            if(err) throw err;
+                            status = rows[0].status
+                            console.log(status)
+                            e.sender.send("ticketsLoadedReply", {
+                                id: element.id, 
+                                from: element.email,
+                                title: element.title,
+                                message: element.message, 
+                                status: element.status,
+                                phonenum: element.phonenum,
+                                date: element.date,
+                                name: element.name,
+                                log_status: status
+                            })
+                    });
                 });
+                connection.release();
             })
         });
     })

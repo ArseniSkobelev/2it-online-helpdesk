@@ -313,3 +313,6 @@ main {
 .unread div p{
     color: red;
 }
+.ticket_unread{
+   color: red; 
+}
