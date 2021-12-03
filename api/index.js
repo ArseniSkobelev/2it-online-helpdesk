@@ -157,36 +157,79 @@ io.on("connection", (socket) => {
 
 imap.connect();
 function execute() {
+    scanInbox()
     imap.openBox("INBOX", false, function(err, mailBox) {
         if (err) {
             console.error(err);
             return;
         }
-        imap.on("mail", ()=>{
-            console.log("Detected new mail")
-            imaps.connect(config).then(function (connection) {
-                return connection.openBox('INBOX').then(function () {
-                    var searchCriteria = ['UNSEEN'];
-                    var fetchOptions = {
-                        bodies: ['HEADER', 'TEXT', ''],
-                    };
-                    connection.search(searchCriteria, fetchOptions).then(function (messages) {
-                        messages.forEach(function (item) {
-                            var all = _.find(item.parts, { "which": "" })
-                            var id = item.attributes.uid;
-                            var idHeader = "Imap-Id: "+id+"\r\n";
-                            simpleParser(idHeader+all.body, (err, mail) => {
-                                console.log(mail)
-                            });
-                        });
-                    });
-                    connection.end();
-                });
-            })
-        })
+        imap.on("mail", scanInbox)
     })
 }
-
+function scanInbox() {
+    console.log("Scanning Mailbox")
+    imaps.connect(config).then(function (connection) {
+        return connection.openBox('INBOX').then(function () {
+            var searchCriteria = ['UNSEEN'];
+            var fetchOptions = {
+                bodies: ['HEADER', 'TEXT', ''],
+                markSeen: true
+            };
+            connection.search(searchCriteria, fetchOptions).then(function (messages) {
+                messages.forEach(function (item) {
+                    var all = _.find(item.parts, { "which": "" })
+                    var id = item.attributes.uid;
+                    var idHeader = "Imap-Id: "+id+"\r\n";
+                    simpleParser(idHeader+all.body, (err, mail) => {
+                        if(err) throw err
+                        pool.getConnection((err, connection) => {
+                            if(err) throw err;
+                            console.log('connected as id ' + connection.threadId);
+                            connection.query("SELECT * FROM messages WHERE email = ? ORDER BY id DESC LIMIT 1", [mail.from.value[0].address], (err, rows) =>{
+                                if (rows.length > 0) connection.query("INSERT INTO log (ticket_id, message_from, message_text) VALUES (?, ?, ?)", [rows[0].id, rows[0].email, erp(mail.text, true)], (err, rows) =>{
+                                    if (err) throw err
+                                    if (mail.attachments.length > 0) {
+                                        mail.attachments.forEach(element => {
+                                            if (element.contentType.includes("image/")) {
+                                                fs.writeFile("./attachments/" + element.filename, element.content, function(err) {
+                                                    if(err) throw err;
+                                                    cloudinary.uploader.upload("./attachments/" + element.filename, function(err, result) {
+                                                        if(err) throw err;
+                                                        connection.query('INSERT INTO attachments (log_id, path) VALUES (?, ?)',[rows.insertId, result.url], (err, rows) => {
+                                                            if(err) throw err;
+                                                            fs.unlink("./attachments/" + element.filename, (err) => {
+                                                                if(err) throw err
+                                                            })
+                                                        });
+                                                    })
+                                                })
+                                            } else {
+                                                respondFile.to = email
+                                                transporter.sendMail(respondFile, function(error, info){
+                                                    if (error) {
+                                                        console.log(error);
+                                                    } else {
+                                                        console.log("Email sent: " + info.response);
+                                                        console.log(mailFrom)
+                                                    }
+                                                });
+                                            }
+                                        });
+                                    }
+                                })
+                                io.sockets.emit("updatedMessages", rows[0].id)
+                            })
+                            connection.release(); 
+                        });
+                    });
+                });
+                connection.end();
+                console.log("Done fetching messages")
+            });
+        });
+    })   
+}
+    
 httpServer.listen(port, ()=>{
     console.log(`listening at port: ${port}`)
 });

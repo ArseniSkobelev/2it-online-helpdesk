@@ -186,8 +186,9 @@
       }
     })
     document.getElementById("scrollToBottom").addEventListener("click", function () {
-      gotoBottom()
-        ipcRenderer.send("loadMessages", currentTicket.id)
+      document.getElementById("messages").innerHTML = ""
+      ipcRenderer.send("loadMessages", currentTicket.id)
+      waitingForRefresh = false
     })
     
     wheelzoom(document.querySelectorAll('img'));
