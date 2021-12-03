@@ -3,14 +3,19 @@ const nodemailer = require('nodemailer');
 const mysql = require('mysql');
 const fs = require('fs');
 const cors = require('cors')
-const express = require('express')
 const imaps = require('imap-simple');
 const simpleParser = require('mailparser').simpleParser;
 const _ = require('lodash');
 const erp = require("node-email-reply-parser");
 const { v4: uuidv4 } = require('uuid');
-var cloudinary = require('cloudinary').v2;
-const app = express()
+const cloudinary = require('cloudinary').v2;
+const express = require("express");
+const { createServer } = require("http");
+const { Server } = require("socket.io");
+
+const app = express();
+const httpServer = createServer(app);
+const io = new Server(httpServer, { /* options */ });
 app.use(cors())
 const port = 3000
 
@@ -135,6 +140,11 @@ app.post('/update', function (req, res) {
     res.status(200).send("Updated messages yes")
 })
 
+io.on("connection", (socket) => {
+    console.log(socket.id)
+});
+  
+
 updateTickets();
 setInterval(updateTickets, 10000)
 
@@ -166,10 +176,10 @@ function updateTickets() {
                                             if(err) throw err;
                                             console.log('connected as id ' + connection.threadId);
                                             connection.query('SELECT * FROM messages WHERE email = ? ORDER BY id DESC',[mail.from.value[0].address], (err, rows) => {
+                                                var messageId = rows[0].id
                                                 if (rows.length > 0) {
                                                     var email = rows[0].email
                                                 }
-                                                connection.release(); 
                                                 console.log("Searched for a previousely opened case with this email")
                                                 if (rows.length != 0) {
                                                     console.log("Not in DB")
@@ -177,7 +187,8 @@ function updateTickets() {
                                                         if(err) throw err;
                                                         console.log('connected as id ' + connection.threadId);
                                                         let mailTest = erp(mail.text, true);
-                                                        connection.query('INSERT INTO log (ticket_id, message_from, message_text) VALUES (?, ?, ?)',[rows[0].id, mail.from.value[0].address, mailTest], (err, rows) => {
+                                                        connection.query('INSERT INTO log (ticket_id, message_from, message_text) VALUES (?, ?, ?)',[messageId, mail.from.value[0].address, mailTest], (err, rows) => {
+                                                            io.sockets.emit("updatedMessages", messageId)
                                                             if (mail.attachments.length > 0) {
                                                                 console.log("Added message to case")
                                                                 mail.attachments.forEach(element => {
@@ -241,6 +252,6 @@ function updateTickets() {
     });
 }
 
-app.listen(port, () => {
+httpServer.listen(port, ()=>{
     console.log(`listening at port: ${port}`)
-})
+});

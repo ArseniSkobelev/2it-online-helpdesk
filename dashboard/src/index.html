@@ -6,6 +6,8 @@
         <title>Dashboard</title>
         <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css" integrity="sha384-AYmEC3Yw5cVb3ZcuHtOA93w35dYTsvhLPVnYs9eStHfGJvOvKxVfELGroGkvsg+p" crossorigin="anonymous"/>
         <link rel="stylesheet" href="./css/index.css">
+        <script src="https://cdn.socket.io/4.4.0/socket.io.min.js" integrity="sha384-1fOn6VtTq3PWwfsOrk45LnYcGosJwzMHv+Xh/Jx5303FVOXzEnw0EpLv30mtjmlj" crossorigin="anonymous"></script>
+        <script defer>const socket = io("http://3.16.42.132:3000");</script>
   </head>
   <body>
     <div id="bigImg" onclick="bigPic()">
@@ -71,6 +73,7 @@
     var checkIfOpen = []
     var element = document.getElementById("messages");
     var attachmentsArray = []
+    var waitingForRefresh = false
 
     document.getElementById("files").onchange = function(e) { 
       if(document.getElementById("files").files[0].path){
@@ -95,27 +98,23 @@
     })
 
     ipcRenderer.send('indexLoaded')
-    ipcRenderer.on("indexLoadedReply", (e, arg) => {
-      setTimeout(function () {
-        refreshMessages()
-      }, 200)
-    })
     ipcRenderer.on("ticketsLoadedReply", (e, arg) => {
       if (!arg) {
         return
       }
       var list = document.createElement("div");
       list.setAttribute('id', 'ticketList')
-      console.log(arg.log_status)
       if (arg.log_status == "unread") {
         list.className = "ticket_unread"
-        console.log("yesdaddy")
       }
       list.classList.add("Ticket") 
       list.id = arg.id
       list.innerHTML = "Ticket " + arg.id + ": " + arg.title 
       currentTicket = arg;
       setStatus(currentTicket)
+      setTimeout(() => {
+        refreshMessages()
+      }, 100);
       gotoBottom()
       list.onclick = function () {
         document.getElementById("flex-row").style.display = "flex"
@@ -177,12 +176,18 @@
     document.getElementById("messages").addEventListener("scroll", function () {
       if (element.scrollTop == element.scrollHeight - element.clientHeight) {
         document.getElementById("scrollToBottom").style.display = "none"
+        if (waitingForRefresh == true) {
+          document.getElementById("messages").innerHTML = ""
+          ipcRenderer.send("loadMessages", currentTicket.id)
+          waitingForRefresh = false
+        }
       } else {
         document.getElementById("scrollToBottom").style.display = "flex"
       }
     })
     document.getElementById("scrollToBottom").addEventListener("click", function () {
       gotoBottom()
+        ipcRenderer.send("loadMessages", currentTicket.id)
     })
     
     wheelzoom(document.querySelectorAll('img'));
@@ -198,6 +203,20 @@
         clicked = false
       }
     }
+
+    socket.on("updatedMessages", (arg) => {
+      if (currentTicket.id == arg) {
+        if (element.scrollTop == element.scrollHeight - element.clientHeight) {
+          document.getElementById("messages").innerHTML = ""
+          ipcRenderer.send("loadMessages", currentTicket.id)
+        }else {
+          waitingForRefresh = true
+        }
+      }
+      if(document.getElementById(arg)) {
+        document.getElementById(arg).classList.add("ticket_unread")
+      }
+    });
 
     function update() {
       ipcRenderer.send("reload")
@@ -220,6 +239,9 @@
       element.scrollTop = element.scrollHeight - element.clientHeight;
     }
     function closeTicket() {
+      if (document.getElementsByClassName("Ticket")[0] == undefined) {
+        return
+      }
       ipcRenderer.send("closeTicket", {id: currentTicket.id, email: currentTicket.from})
       document.getElementById("flex-row").style.display = "none"
       refreshTickets()
@@ -243,12 +265,5 @@
       document.getElementById("email").innerText = "E-mail: " + E.from
       document.getElementById("date").innerText = "Date: " + tempTime
     }
-
-    setInterval(() => {
-      if (element.scrollTop == element.scrollHeight - element.clientHeight) {
-        document.getElementById("messages").innerHTML = ""
-        ipcRenderer.send("loadMessages", currentTicket.id)
-      }
-    }, 10000);
   </script>
 </html>
