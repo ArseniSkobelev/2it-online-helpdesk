@@ -114,7 +114,9 @@ function createWindow () {
                     var status = ""
                     connection.query('SELECT status FROM log WHERE ticket_id = ? ORDER BY id DESC limit 1',[element.id], (err, rows) => {
                             if(err) throw err;
-                            status = rows[0].status
+                            if (rows.length > 0) {
+                                status = rows[0].status
+                            }
                             console.log(status)
                             e.sender.send("ticketsLoadedReply", {
                                 id: element.id, 
