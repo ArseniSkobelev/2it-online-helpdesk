@@ -12,17 +12,17 @@ const { stat } = require('fs');
 var transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: "***REMOVED***",
-      pass: "***REMOVED***"
+      user: "",
+      pass: ""
     }
 });
 
 let currentUser = {}
 
 cloudinary.config({ 
-    cloud_name: '***REMOVED***', 
-    api_key: '***REMOVED***', 
-    api_secret: '***REMOVED***',
+    cloud_name: '', 
+    api_key: '', 
+    api_secret: '',
     secure: true
 });
 
@@ -37,10 +37,10 @@ var mailTo = {
 
 
 const pool = mysql.createPool({
-    host     : "***REMOVED***",
-    user     : "***REMOVED***",
-    password : "***REMOVED***",
-    database : "***REMOVED***"
+    host     : "",
+    user     : "",
+    password : "",
+    database : ""
 });
 
 function createWindow () {
