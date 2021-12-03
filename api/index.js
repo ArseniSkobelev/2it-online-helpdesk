@@ -4,6 +4,8 @@ const mysql = require('mysql');
 const fs = require('fs');
 const cors = require('cors')
 const imaps = require('imap-simple');
+const Imap = require('imap')
+const Promise = require("bluebird");
 const simpleParser = require('mailparser').simpleParser;
 const _ = require('lodash');
 const erp = require("node-email-reply-parser");
@@ -53,9 +55,18 @@ var config = {
         host: 'imap.gmail.com',
         port: 993,
         tls: true,
-        authTimeout: 3000
     }
 };
+var imapConfig = {
+    user: process.env.EMAIL_USER,
+    password: process.env.EMAIL_PASSWORD,
+    host: 'imap.gmail.com',
+    port: 993,
+    tls: true,
+};
+var imap = new Imap(imapConfig);
+Promise.longStackTraces();
+imap.once("ready", execute);
 
 var transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -143,113 +154,37 @@ app.post('/update', function (req, res) {
 io.on("connection", (socket) => {
     console.log(socket.id)
 });
-  
 
-updateTickets();
-setInterval(updateTickets, 10000)
-
-function updateTickets() {
-    console.log("Searching through email")
-    imaps.connect(config).then(function (connection) {
-        return connection.openBox('INBOX').then(function () {
-            var searchCriteria = ['*'];
-            var fetchOptions = {
-                bodies: ['HEADER', 'TEXT', ''],
-            };
-            return connection.search(searchCriteria, fetchOptions).then(function (messages) {
-                messages.forEach(function (item) {
-                    var all = _.find(item.parts, { "which": "" })
-                    var id = item.attributes.uid;
-                    var idHeader = "Imap-Id: "+id+"\r\n";
-                    simpleParser(idHeader+all.body, (err, mail) => {
-                        pool.getConnection((err, connection) => {
-                            if(err) throw err;
-                            console.log('connected as id ' + connection.threadId);
-                            let mailTest = erp(mail.text, true);
-                            connection.query("SELECT * FROM log WHERE message_text = ?",[mailTest], (err, rows) => {
-                                if(err) throw err;
-                                connection.release(); 
-                                console.log("Checked matching for messages")
-                                    if (rows.length == 0) {
-                                        console.log("Found a non matching message")
-                                        pool.getConnection((err, connection) => {
-                                            if(err) throw err;
-                                            console.log('connected as id ' + connection.threadId);
-                                            connection.query('SELECT * FROM messages WHERE email = ? ORDER BY id DESC',[mail.from.value[0].address], (err, rows) => {
-                                                var messageId = rows[0].id
-                                                if (rows.length > 0) {
-                                                    var email = rows[0].email
-                                                }
-                                                console.log("Searched for a previousely opened case with this email")
-                                                if (rows.length != 0) {
-                                                    console.log("Not in DB")
-                                                    pool.getConnection((err, connection) => {
-                                                        if(err) throw err;
-                                                        console.log('connected as id ' + connection.threadId);
-                                                        let mailTest = erp(mail.text, true);
-                                                        connection.query('INSERT INTO log (ticket_id, message_from, message_text) VALUES (?, ?, ?)',[messageId, mail.from.value[0].address, mailTest], (err, rows) => {
-                                                            io.sockets.emit("updatedMessages", messageId)
-                                                            if (mail.attachments.length > 0) {
-                                                                console.log("Added message to case")
-                                                                mail.attachments.forEach(element => {
-                                                                    console.log(element)
-                                                                    if (element.contentType.includes("image/")) {
-                                                                        fs.writeFile("./attachments/" + element.filename, element.content, function(err) {
-                                                                            if(err) throw err;
-                                                                            cloudinary.uploader.upload("./attachments/" + element.filename, function(error, result) {
-                                                                                if(error) throw error;
-                                                                                connection.query('SELECT id FROM log ORDER BY id DESC LIMIT 1', (err, rows) => {
-                                                                                    if(err) throw err;
-                                                                                    console.log("yes:" + rows[0].id)
-                                                                                    connection.query('INSERT INTO attachments (log_id, path) VALUES (?, ?)',[rows[0].id, result.url], (err, rows) => {
-                                                                                        if(err) throw err;
-                                                                                        console.log("inserted attachments to db")
-                                                                                    });
-                                                                                })
-                                                                                fs.unlink("./attachments/" + element.filename, () => {
-                                                                                    console.log("succsucc")
-                                                                                })
-                                                                            });
-                                                                        })
-                                                                    } else {
-                                                                        respondFile.to = email
-                                                                        transporter.sendMail(respondFile, function(error, info){
-                                                                            if (error) {
-                                                                                console.log(error);
-                                                                            } else {
-                                                                                console.log("Email sent: " + info.response);
-                                                                                console.log(mailFrom)
-                                                                            }
-                                                                        });
-                                                                    }
-                                                                })
-                                                            }
-                                                            if(err) {
-                                                                throw err
-                                                            }
-                                                        });
-                                                        connection.release();
-                                                    });
-                                                } else{
-                                                    console.log("Already in DB")
-                                                }
-                                                if(err) {
-                                                    throw err
-                                                }
-                                            });
-                                        });
-                                    }
-                                if(err) {
-                                    throw err
-                                }
+imap.connect();
+function execute() {
+    imap.openBox("INBOX", false, function(err, mailBox) {
+        if (err) {
+            console.error(err);
+            return;
+        }
+        imap.on("mail", ()=>{
+            console.log("Detected new mail")
+            imaps.connect(config).then(function (connection) {
+                return connection.openBox('INBOX').then(function () {
+                    var searchCriteria = ['UNSEEN'];
+                    var fetchOptions = {
+                        bodies: ['HEADER', 'TEXT', ''],
+                    };
+                    connection.search(searchCriteria, fetchOptions).then(function (messages) {
+                        messages.forEach(function (item) {
+                            var all = _.find(item.parts, { "which": "" })
+                            var id = item.attributes.uid;
+                            var idHeader = "Imap-Id: "+id+"\r\n";
+                            simpleParser(idHeader+all.body, (err, mail) => {
+                                console.log(mail)
                             });
-                        }); 
+                        });
                     });
+                    connection.end();
                 });
-                connection.end();
-            });
-        });
-    });
+            })
+        })
+    })
 }
 
 httpServer.listen(port, ()=>{
