@@ -20,9 +20,9 @@ var transporter = nodemailer.createTransport({
 let currentUser = {}
 
 cloudinary.config({ 
-    cloud_name: '', 
-    api_key: '', 
-    api_secret: '',
+    cloud_name: 'djxvcc8r1', 
+    api_key: '416725511812726', 
+    api_secret: 'qx3Tk1Ns9_R9_fg-jHRPjD5SovM',
     secure: true
 });
 
@@ -137,6 +137,17 @@ function createWindow () {
             connection.release();
         });
     })
+    ipcMain.on("setStatus", function(e, obj) {
+        pool.getConnection((err, connection) => {
+            if(err) throw err;
+            connection.query("UPDATE log SET status = 'read' WHERE ticket_id = ? AND status = 'unread'",[obj.id], (err, rows) => {
+                if(err) throw err;
+            })
+            connection.query("UPDATE messages SET status_read = 'read' WHERE id = ? AND status_read = 'unread'",[obj.id], (err, rows) => {
+                if(err) throw err;
+            })
+        });
+    })
     ipcMain.on("sendMessage", function(e, obj) {
         pool.getConnection((err, connection) => {
             if(err) throw err;
@@ -241,12 +252,6 @@ function createWindow () {
                                     attachments: attachments,
                                     log_status: element.status
                                 })
-                                connection.query("UPDATE log SET status = 'read' WHERE ticket_id = ? AND status = 'unread'",[id], (err, rows) => {
-                                    if(err) throw err;
-                                })
-                                // connection.query("UPDATE messages SET status_read = 'read' WHERE id = ? AND status = 'unread'",[id], (err, rows) => {
-                                //     if(err) throw err;
-                                // })
                             });
                         })
                 } else {
@@ -265,24 +270,7 @@ function createWindow () {
             if(err) throw err;
             console.log('connected as id ' + connection.threadId);
             connection.query("UPDATE messages SET status = 'closed' WHERE id = ?",[obj.id], (err, rows) => {
-                connection.release();
                 if(err) throw err;
-                console.log('connected as id ' + connection.threadId);
-                connection.query('SELECT * FROM messages WHERE status = "open"', (err, rows) => {
-                    if(err) throw err;
-                    rows.forEach(element => {
-                        e.sender.send("ticketsLoadedReply", {
-                            id: element.id, 
-                            from: element.email,
-                            title: element.title,
-                            message: element.message, 
-                            status: element.status,
-                            phonenum: element.phonenum,
-                            date: element.date,
-                            name: element.name
-                        })
-                    });
-                })
                 mailTo.text = "Ticket med id " + obj.id + " Har blitt stengt. Gå til helpdesk.avgs-ikt.com for å sende en ny."
                 mailTo.to = obj.email
                 transporter.sendMail(mailTo, function(error, info){
