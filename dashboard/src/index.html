@@ -7,7 +7,7 @@
         <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css" integrity="sha384-AYmEC3Yw5cVb3ZcuHtOA93w35dYTsvhLPVnYs9eStHfGJvOvKxVfELGroGkvsg+p" crossorigin="anonymous"/>
         <link rel="stylesheet" href="./css/index.css">
         <script src="https://cdn.socket.io/4.4.0/socket.io.min.js" integrity="sha384-1fOn6VtTq3PWwfsOrk45LnYcGosJwzMHv+Xh/Jx5303FVOXzEnw0EpLv30mtjmlj" crossorigin="anonymous"></script>
-        <script defer>const socket = io("http://3.16.42.132:3000");</script>
+        <script defer>const socket = io("http://localhost:3000");</script>
   </head>
   <body>
     <div id="bigImg" onclick="bigPic()">
@@ -68,6 +68,7 @@
   <script>
     const { ipcRenderer } = require("electron")
     
+    var initialLoad = true
     var canBeDone = true
     var currentTicket
     var checkIfOpen = []
@@ -78,7 +79,6 @@
     document.getElementById("files").onchange = function(e) { 
       if(document.getElementById("files").files[0].path){
         attachmentsArray.push(document.getElementById("files").files[0].path)
-        console.log(attachmentsArray)
       }
     };
 
@@ -98,35 +98,32 @@
     })
 
     ipcRenderer.send('indexLoaded')
+    ipcRenderer.send('loadTickets')
     ipcRenderer.on("ticketsLoadedReply", (e, arg) => {
       if (!arg) {
         return
       }
       var list = document.createElement("div");
       list.setAttribute('id', 'ticketList')
-      if (arg.log_status == "unread") {
+      if (arg.log_status == "unread" || arg.status_read == "unread") {
         list.className = "ticket_unread"
       }
       list.classList.add("Ticket") 
       list.id = arg.id
       list.innerHTML = "Ticket " + arg.id + ": " + arg.title 
-      currentTicket = arg;
-      setStatus(currentTicket)
-      setTimeout(() => {
-        refreshMessages()
-      }, 100);
-      gotoBottom()
+      if (initialLoad == true) {
+        currentTicket = arg;
+        setColor(list)
+        setTimeout(() => {
+          refreshMessages()
+        }, 100);
+      }
       list.onclick = function () {
         document.getElementById("flex-row").style.display = "flex"
-        document.getElementById("messages").innerHTML=""
-        ipcRenderer.send('loadMessages', this.id)
-        for (let i = 0; i < document.getElementsByClassName("Ticket").length; i++) {
-          document.getElementsByClassName("Ticket")[i].className = "Ticket"
-        }
-        this.className = "Ticket-dark Ticket"
         currentTicket = arg;
-        setStatus(currentTicket)
-        gotoBottom()
+        refreshMessages()
+        setColor(this)
+        initialLoad = false
       };
       for (i in arg) {
         let item = document.createElement("div");
@@ -137,6 +134,13 @@
         document.getElementById("ticketMenu").appendChild(list);
     })
     ipcRenderer.on("logLoadedReply", (e, arg) => {
+      var tempTime = currentTicket.date.toUTCString().split(" ")[0] + " " + currentTicket.date.toUTCString().split(" ")[1] + " " + currentTicket.date.toUTCString().split(" ")[2]
+      document.getElementById("id").innerText = "ID: " + currentTicket.id
+      document.getElementById("status").innerText = "Status: " + currentTicket.status
+      document.getElementById("name").innerText = "Name: " + currentTicket.name
+      document.getElementById("tlf").innerText = "Tlf number: " + currentTicket.phonenum
+      document.getElementById("email").innerText = "E-mail: " + currentTicket.from
+      document.getElementById("date").innerText = "Date: " + tempTime
       document.getElementById("title").innerText = arg.title
       document.getElementById("description").innerText = arg.description
       if (arg.id == 0) {
@@ -153,7 +157,7 @@
         item.classList.add("recieved")
       }
       item.classList.add(arg.log_status)
-      let tempTime = arg.date.toUTCString()
+      var tempTime = arg.date.toUTCString()
       tempTime = parseInt(tempTime.split(" ")[4].split(":")[0]) + 2 + ":" + tempTime.split(" ")[4].split(":")[1]
       if (tempTime > 23) { 
         tempTime = tempTime - 24
@@ -177,8 +181,7 @@
       if (element.scrollTop == element.scrollHeight - element.clientHeight) {
         document.getElementById("scrollToBottom").style.display = "none"
         if (waitingForRefresh == true) {
-          document.getElementById("messages").innerHTML = ""
-          ipcRenderer.send("loadMessages", currentTicket.id)
+          refreshMessages()
           waitingForRefresh = false
         }
       } else {
@@ -186,8 +189,7 @@
       }
     })
     document.getElementById("scrollToBottom").addEventListener("click", function () {
-      document.getElementById("messages").innerHTML = ""
-      ipcRenderer.send("loadMessages", currentTicket.id)
+      refreshMessages()
       waitingForRefresh = false
     })
     
@@ -204,12 +206,15 @@
         clicked = false
       }
     }
+    socket.on("updateTickets", () => {
+      document.getElementById("ticketMenu").innerHTML = ""
+      ipcRenderer.send("loadTickets")
+    })
 
     socket.on("updatedMessages", (arg) => {
       if (currentTicket.id == arg) {
         if (element.scrollTop == element.scrollHeight - element.clientHeight) {
-          document.getElementById("messages").innerHTML = ""
-          ipcRenderer.send("loadMessages", currentTicket.id)
+          refreshMessages()
         }else {
           waitingForRefresh = true
         }
@@ -245,26 +250,18 @@
       }
       ipcRenderer.send("closeTicket", {id: currentTicket.id, email: currentTicket.from})
       document.getElementById("flex-row").style.display = "none"
-      refreshTickets()
+      document.getElementById("ticketMenu").innerHTML = ""
       setTimeout(function (){
         document.getElementById("messages").innerHTML = ""
         document.getElementById("title").innerHTML = ""
         document.getElementById("description").innerHTML = ""
       }, 300)
     }
-    function refreshTickets() {
-      document.getElementById("ticketMenu").innerHTML = ""
-    }
-    function setStatus(E) {
-      let tempTime = E.date.toUTCString().split(" ")[0] + " " + E.date.toUTCString().split(" ")[1] + " " + E.date.toUTCString().split(" ")[2]
-      // document.getElementById("title").innerText = ""
-      // document.getElementById("description").innerText = ""
-      document.getElementById("id").innerText = "ID: " + E.id
-      document.getElementById("status").innerText = "Status: " + E.status
-      document.getElementById("name").innerText = "Name: " + E.name
-      document.getElementById("tlf").innerText = "Tlf number: " + E.phonenum
-      document.getElementById("email").innerText = "E-mail: " + E.from
-      document.getElementById("date").innerText = "Date: " + tempTime
+    function setColor(element) {
+      for (let i = 0; i < document.getElementsByClassName("Ticket").length; i++) {
+          document.getElementsByClassName("Ticket")[i].classList.remove("Ticket-dark")
+        }
+      element.classList.add("Ticket-dark")
     }
   </script>
 </html>
