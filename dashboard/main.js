@@ -12,8 +12,8 @@ const { stat } = require('fs');
 var transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: "",
-      pass: ""
+      user: "vg1im.alesundvgs@gmail.com",
+      pass: "Qwerty12345@3"
     }
 });
 
@@ -37,10 +37,10 @@ var mailTo = {
 
 
 const pool = mysql.createPool({
-    host     : "",
-    user     : "",
-    password : "",
-    database : ""
+    host     : "45.87.81.111",
+    user     : "u145594474_admin",
+    password : "Qwerty12345@",
+    database : "u145594474_Helpdesk"
 });
 
 function createWindow () {
@@ -102,9 +102,11 @@ function createWindow () {
             if(err) throw err;
             console.log('connected as id ' + connection.threadId);
             connection.query('SELECT * FROM users WHERE username=?',[user], (err, rows) => {                
-                connection.release();
             })
+            connection.release();
         });
+    })
+    ipcMain.on("loadTickets", function(e) {
         pool.getConnection((err, connection) => {
             if(err) throw err;
             console.log('connected as id ' + connection.threadId);
@@ -117,7 +119,6 @@ function createWindow () {
                             if (rows.length > 0) {
                                 status = rows[0].status
                             }
-                            console.log(status)
                             e.sender.send("ticketsLoadedReply", {
                                 id: element.id, 
                                 from: element.email,
@@ -127,20 +128,20 @@ function createWindow () {
                                 phonenum: element.phonenum,
                                 date: element.date,
                                 name: element.name,
-                                log_status: status
+                                log_status: status,
+                                status_read: element.status_read
                             })
                     });
                 });
-                connection.release();
             })
+            connection.release();
         });
     })
     ipcMain.on("sendMessage", function(e, obj) {
-        
         pool.getConnection((err, connection) => {
             if(err) throw err;
             console.log('connected as id ' + connection.threadId);
-            connection.query('INSERT INTO log (ticket_id, message_from, message_text, status) VALUES (?, ?, ?)',[obj.id, 'vg1im.alesundvgs@gmail.com', obj.message, 'read'], (err, rows) => {
+            connection.query('INSERT INTO log (ticket_id, message_from, message_text) VALUES (?, ?, ?)',[obj.id, 'vg1im.alesundvgs@gmail.com', obj.message], (err, rows) => {
                 if(err) throw err;
                 if (obj.path.length > 0) {
                     imgArray = []
@@ -153,7 +154,6 @@ function createWindow () {
                                     if(err) throw err;
                                     connection.query('INSERT INTO attachments (log_id, path) VALUES (?, ?)',[rows[0].id, result.url], (err, rows) => {
                                         if(err) throw err;
-                                        console.log("inserted attachments to db")
                                         if (index === array.length -1) resolve();
                                     });
                                 })
@@ -180,17 +180,14 @@ function createWindow () {
                         far.then(() => {
                             mailTo.attachments = attachmentsArray
                             transporter.sendMail(mailTo, function(error, info){
-                                if (error) {
-                                    console.log(error);
-                                } else {
-                                    console.log("Email sent: " + info.response);
-                                }
+                                if (error) throw error;
+                                console.log("Email sent: " + info.response);   
                             });
                         })
                     })
                 }
-                connection.release();
             })
+            connection.release();
         });
     })
     ipcMain.on("loadMessages", function(e, id){
@@ -247,6 +244,9 @@ function createWindow () {
                                 connection.query("UPDATE log SET status = 'read' WHERE ticket_id = ? AND status = 'unread'",[id], (err, rows) => {
                                     if(err) throw err;
                                 })
+                                // connection.query("UPDATE messages SET status_read = 'read' WHERE id = ? AND status = 'unread'",[id], (err, rows) => {
+                                //     if(err) throw err;
+                                // })
                             });
                         })
                 } else {
@@ -256,20 +256,16 @@ function createWindow () {
                         description: desc
                     }) 
                 }
-                connection.release();
             })
+            connection.release();
         });
     })
-}
-
-ipcMain.on("closeTicket", function(e, obj){
-    pool.getConnection((err, connection) => {
-        if(err) throw err;
-        console.log('connected as id ' + connection.threadId);
-        connection.query("UPDATE messages SET status = 'closed' WHERE id = ?",[obj.id], (err, rows) => {
-            connection.release();
+    ipcMain.on("closeTicket", function(e, obj){
+        pool.getConnection((err, connection) => {
             if(err) throw err;
-            pool.getConnection((err, connection) => {
+            console.log('connected as id ' + connection.threadId);
+            connection.query("UPDATE messages SET status = 'closed' WHERE id = ?",[obj.id], (err, rows) => {
+                connection.release();
                 if(err) throw err;
                 console.log('connected as id ' + connection.threadId);
                 connection.query('SELECT * FROM messages WHERE status = "open"', (err, rows) => {
@@ -286,64 +282,62 @@ ipcMain.on("closeTicket", function(e, obj){
                             name: element.name
                         })
                     });
-                    connection.release();
-            })
-            mailTo.text = "Ticket med id " + obj.id + " Har blitt stengt. Gå til helpdesk.avgs-ikt.com for å sende en ny."
-            mailTo.to = obj.email
-            transporter.sendMail(mailTo, function(error, info){
-                if (error) {
-                    console.log(error);
-                } else {
+                })
+                mailTo.text = "Ticket med id " + obj.id + " Har blitt stengt. Gå til helpdesk.avgs-ikt.com for å sende en ny."
+                mailTo.to = obj.email
+                transporter.sendMail(mailTo, function(error, info){
+                    if (error) throw error;
                     console.log("Email sent: " + info.response);
+                })
+            })
+            connection.release();
+        });
+    })
+    ipcMain.on("refreshMessages", function(e, id) {
+        let title
+        let desc
+        let email
+        let status
+        pool.getConnection((err, connection) => {
+            if(err) throw err;
+            console.log('connected as id ' + connection.threadId);
+            connection.query('SELECT title, message, email, status FROM messages WHERE id = ?',[id], (err, rows) => {
+                if(err) throw err;
+                title = rows[0].title
+                desc = rows[0].message
+                email = rows[0].email
+                status = rows[0].status
+            })
+            connection.query('SELECT ticket_id, message_from, message_text, length date FROM log WHERE ticket_id = ?',[id], (err, rows) => {
+                if(err) throw err;
+                if (rows.length>0) {
+                    rows.forEach(element => {
+                        e.sender.send("logLoadedReply", {
+                            id: element.ticket_id,
+                            from: element.message_from,
+                            message: element.message_text,
+                            date: element.date,
+                            elements: rows.length,
+                            title: title,
+                            description: desc,
+                            email: email,
+                            status: status
+                        })
+                    });
+                } else {
+                    e.sender.send("logLoadedReply", {
+                        id: 0,
+                        title: title,
+                        description: desc
+                    }) 
                 }
             })
-        });
-        })
-    });
-})
-
-ipcMain.on("refreshMessages", function(e, id) {
-    let title
-    let desc
-    let email
-    let status
-    pool.getConnection((err, connection) => {
-        if(err) throw err;
-        console.log('connected as id ' + connection.threadId);
-        connection.query('SELECT * FROM messages WHERE id = ?',[id], (err, rows) => {
-            if(err) throw err;
-            title = rows[0].title
-            desc = rows[0].message
-            email = rows[0].email
-            status = rows[0].status
-        })
-        connection.query('SELECT * FROM log WHERE ticket_id = ?',[id], (err, rows) => {
-            if(err) throw err;
             connection.release();
-            if (rows.length>0) {
-                rows.forEach(element => {
-                    e.sender.send("logLoadedReply", {
-                        id: element.ticket_id,
-                        from: element.message_from,
-                        message: element.message_text,
-                        date: element.date,
-                        elements: rows.length,
-                        title: title,
-                        description: desc,
-                        email: email,
-                        status: status
-                    })
-                });
-            } else {
-                e.sender.send("logLoadedReply", {
-                    id: 0,
-                    title: title,
-                    description: desc
-                }) 
-            }
-        })
+        });
     });
-});
+}
+
+
 
 app.whenReady().then(() => {
     createWindow();
@@ -356,4 +350,3 @@ app.whenReady().then(() => {
 app.on('window-all-closed', function () {
     if (process.platform !== 'darwin') app.quit()
 })
-

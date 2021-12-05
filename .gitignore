@@ -2,3 +2,4 @@
 .fuckyou
 node_modules
 api/attachments/*
+dist
