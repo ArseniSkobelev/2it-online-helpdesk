@@ -98,7 +98,7 @@
     })
 
     ipcRenderer.send('indexLoaded')
-    ipcRenderer.send('loadTickets')
+    updateTicket()
     ipcRenderer.on("ticketsLoadedReply", (e, arg) => {
       if (!arg) {
         return
@@ -121,6 +121,8 @@
       list.onclick = function () {
         document.getElementById("flex-row").style.display = "flex"
         currentTicket = arg;
+        ipcRenderer.send("setStatus", currentTicket)
+        this.style.color = "black"
         refreshMessages()
         setColor(this)
         initialLoad = false
@@ -207,8 +209,7 @@
       }
     }
     socket.on("updateTickets", () => {
-      document.getElementById("ticketMenu").innerHTML = ""
-      ipcRenderer.send("loadTickets")
+      updateTicket()
     })
 
     socket.on("updatedMessages", (arg) => {
@@ -249,6 +250,7 @@
         return
       }
       ipcRenderer.send("closeTicket", {id: currentTicket.id, email: currentTicket.from})
+      updateTicket()
       document.getElementById("flex-row").style.display = "none"
       document.getElementById("ticketMenu").innerHTML = ""
       setTimeout(function (){
@@ -262,6 +264,10 @@
           document.getElementsByClassName("Ticket")[i].classList.remove("Ticket-dark")
         }
       element.classList.add("Ticket-dark")
+    }
+    function updateTicket() {
+      document.getElementById("ticketMenu").innerHTML = ""
+      ipcRenderer.send("loadTickets")
     }
   </script>
 </html>
