@@ -260,11 +260,11 @@ main {
     margin-bottom: 30px;
 }
 
-#refreshMessages {
+#refresh {
     margin-left: 10px;
 }
 
-#refreshMessages > img {
+#refresh > img {
     width: 50%;
 }
 
@@ -311,8 +311,8 @@ main {
     justify-content: center;
 }
 .unread div p{
-    color: red;
+    font-weight: 900;
 }
 .ticket_unread{
-   color: red; 
+    font-weight: 900;
 }

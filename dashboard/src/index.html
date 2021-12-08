@@ -7,7 +7,7 @@
         <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css" integrity="sha384-AYmEC3Yw5cVb3ZcuHtOA93w35dYTsvhLPVnYs9eStHfGJvOvKxVfELGroGkvsg+p" crossorigin="anonymous"/>
         <link rel="stylesheet" href="./css/index.css">
         <script src="https://cdn.socket.io/4.4.0/socket.io.min.js" integrity="sha384-1fOn6VtTq3PWwfsOrk45LnYcGosJwzMHv+Xh/Jx5303FVOXzEnw0EpLv30mtjmlj" crossorigin="anonymous"></script>
-        <script defer>const socket = io("http://localhost:3000");</script>
+        <script defer>const socket = io("http://13.51.163.75:3000");</script>
   </head>
   <body>
     <div id="bigImg" onclick="bigPic()">
@@ -44,7 +44,7 @@
         <div id="right-cont">
           <div id="right-title">
             <h1>Ticket details</h1>
-            <button id="refreshMessages" onclick="update()"><img src="./img/reload.svg" alt=""></button>
+            <button id="refresh" onclick="update()"><img src="./img/reload.svg" alt=""></button>
           </div>
           <div id="flex-row">
             <div style="display: flex; flex-direction: row;">
@@ -104,36 +104,29 @@
         return
       }
       var list = document.createElement("div");
-      list.setAttribute('id', 'ticketList')
       if (arg.log_status == "unread" || arg.status_read == "unread") {
         list.className = "ticket_unread"
       }
       list.classList.add("Ticket") 
       list.id = arg.id
       list.innerHTML = "Ticket " + arg.id + ": " + arg.title 
-      if (initialLoad == true) {
-        currentTicket = arg;
-        setColor(list)
-        setTimeout(() => {
-          refreshMessages()
-        }, 100);
-      }
+      currentTicket = arg;
+      // if (initialLoad == true) {
+        // setColor(list)
+        // refreshMessages()
+      // }
       list.onclick = function () {
         document.getElementById("flex-row").style.display = "flex"
         currentTicket = arg;
-        ipcRenderer.send("setStatus", currentTicket)
-        this.style.color = "black"
         refreshMessages()
+        this.style.fontWeight = "normal"
         setColor(this)
         initialLoad = false
+        setTimeout(() => {
+          ipcRenderer.send("setStatus", currentTicket)
+        }, 100);
       };
-      for (i in arg) {
-        let item = document.createElement("div");
-        item.classList.add('hidden')
-        item.innerHTML = i + ": " + arg[i];
-        list.appendChild(item);
-      }
-        document.getElementById("ticketMenu").appendChild(list);
+      document.getElementById("ticketMenu").appendChild(list);
     })
     ipcRenderer.on("logLoadedReply", (e, arg) => {
       var tempTime = currentTicket.date.toUTCString().split(" ")[0] + " " + currentTicket.date.toUTCString().split(" ")[1] + " " + currentTicket.date.toUTCString().split(" ")[2]
@@ -215,7 +208,9 @@
     socket.on("updatedMessages", (arg) => {
       if (currentTicket.id == arg) {
         if (element.scrollTop == element.scrollHeight - element.clientHeight) {
-          refreshMessages()
+          if (initialLoad == false) {
+            refreshMessages()
+          }
         }else {
           waitingForRefresh = true
         }
@@ -223,6 +218,7 @@
       if(document.getElementById(arg)) {
         document.getElementById(arg).classList.add("ticket_unread")
       }
+      alert("New message")
     });
 
     function update() {
@@ -239,8 +235,8 @@
       document.body.appendChild(loading)
     }
     function refreshMessages() {
-        document.getElementById("messages").innerHTML=""
-        ipcRenderer.send('loadMessages', currentTicket.id)
+      document.getElementById("messages").innerHTML=""
+      ipcRenderer.send('loadMessages', currentTicket.id)
     };
     function gotoBottom(){
       element.scrollTop = element.scrollHeight - element.clientHeight;
