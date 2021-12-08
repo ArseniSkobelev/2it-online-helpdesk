@@ -189,6 +189,7 @@ function scanInbox() {
                             connection.query("SELECT * FROM messages WHERE email = ? ORDER BY id DESC LIMIT 1", [mail.from.value[0].address], (err, rows) =>{
                                 if (rows.length > 0) {
                                     connection.query("INSERT INTO log (ticket_id, message_from, message_text) VALUES (?, ?, ?)", [rows[0].id, rows[0].email, erp(mail.text, true)], (err, rows) =>{
+                                        var oldRows = rows
                                         if (err) throw err
                                         if (mail.attachments.length > 0) {
                                             mail.attachments.forEach(element => {
@@ -199,6 +200,7 @@ function scanInbox() {
                                                             if(err) throw err;
                                                             connection.query('INSERT INTO attachments (log_id, path) VALUES (?, ?)',[rows.insertId, result.url], (err, rows) => {
                                                                 if(err) throw err;
+                                                                io.sockets.emit("updatedMessages", oldRows[0].id)
                                                                 fs.unlink("./attachments/" + element.filename, (err) => {
                                                                     if(err) throw err
                                                                 })
@@ -217,9 +219,10 @@ function scanInbox() {
                                                     });
                                                 }
                                             });
+                                        } else{
+                                            io.sockets.emit("updatedMessages", rows[0].id)
                                         }
                                     })
-                                io.sockets.emit("updatedMessages", rows[0].id)
                                 }
                             })
                             connection.release(); 
