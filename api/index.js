@@ -200,11 +200,11 @@ function scanInbox() {
                                                             if(err) throw err;
                                                             connection.query('INSERT INTO attachments (log_id, path) VALUES (?, ?)',[rows.insertId, result.url], (err, rows) => {
                                                                 if(err) throw err;
-                                                                io.sockets.emit("updatedMessages", oldRows[0].id)
                                                                 fs.unlink("./attachments/" + element.filename, (err) => {
                                                                     if(err) throw err
                                                                 })
                                                             });
+                                                            io.sockets.emit("updatedMessages", oldRows[0].id)
                                                         })
                                                     })
                                                 } else {
