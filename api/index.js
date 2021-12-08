@@ -78,14 +78,14 @@ var transporter = nodemailer.createTransport({
 
 var mailFrom = {
     from: 'helpdesk-bot@avgs-ikt.com',
-    to: '***REMOVED***',
+    to: 'vg1im.alesundvgs@gmail.com',
     subject: 'New support ticket submitted with id',
     text: 'Check dashboard for more info',
     encoding: 'base64'
 };
 var mailTo = {
     from: 'helpdesk-bot@avgs-ikt.com',
-    to: '***REMOVED***',
+    to: 'vg1im.alesundvgs@gmail.com',
     subject: 'New support ticket submitted with id',
     text: '',
     encoding: 'base64'

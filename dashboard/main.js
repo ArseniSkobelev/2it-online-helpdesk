@@ -12,17 +12,17 @@ const { stat } = require('fs');
 var transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: "***REMOVED***",
-      pass: "***REMOVED***"
+      user: "",
+      pass: ""
     }
 });
 
 let currentUser = {}
 
 cloudinary.config({ 
-    cloud_name: '***REMOVED***', 
-    api_key: '***REMOVED***', 
-    api_secret: '***REMOVED***',
+    cloud_name: '', 
+    api_key: '', 
+    api_secret: '',
     secure: true
 });
 
@@ -37,10 +37,10 @@ var mailTo = {
 
 
 const pool = mysql.createPool({
-    host     : "***REMOVED***",
-    user     : "***REMOVED***",
-    password : "***REMOVED***",
-    database : "***REMOVED***"
+    host     : "",
+    user     : "",
+    password : "",
+    database : ""
 });
 
 function createWindow () {
@@ -152,7 +152,7 @@ function createWindow () {
         pool.getConnection((err, connection) => {
             if(err) throw err;
             console.log('connected as id ' + connection.threadId);
-            connection.query('INSERT INTO log (ticket_id, message_from, message_text) VALUES (?, ?, ?)',[obj.id, '***REMOVED***', obj.message], (err, rows) => {
+            connection.query('INSERT INTO log (ticket_id, message_from, message_text) VALUES (?, ?, ?)',[obj.id, 'vg1im.alesundvgs@gmail.com', obj.message], (err, rows) => {
                 if(err) throw err;
                 if (obj.path.length > 0) {
                     imgArray = []
