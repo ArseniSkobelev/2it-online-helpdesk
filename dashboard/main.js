@@ -8,23 +8,10 @@ const dotenv = require('dotenv').config()
 const request = require('request').defaults({ encoding: null });
 const cloudinary = require('cloudinary').v2;
 const { stat } = require('fs');
+//config
 
-var transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: "",
-      pass: ""
-    }
-});
-
+//config
 let currentUser = {}
-
-cloudinary.config({ 
-    cloud_name: '', 
-    api_key: '', 
-    api_secret: '',
-    secure: true
-});
 
 var mailTo = {
     from: 'helpdesk-bot@avgs-ikt.com',
@@ -34,14 +21,6 @@ var mailTo = {
     encoding: 'base64',
     attachments: []
 };
-
-
-const pool = mysql.createPool({
-    host     : "",
-    user     : "",
-    password : "",
-    database : ""
-});
 
 function createWindow () {
     const win = new BrowserWindow({
