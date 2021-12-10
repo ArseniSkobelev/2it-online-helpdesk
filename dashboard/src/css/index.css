@@ -316,3 +316,22 @@ main {
 .ticket_unread{
     font-weight: 900;
 }
+#attachmentpreview{
+    position: fixed;
+    display: flex;
+    width: 100vw;
+    height: 200px;
+    overflow: auto;
+    bottom: 0;
+}
+#attachmentpreview img{
+    height: calc(100% - 45px);
+    width: auto;
+    margin: 30px 15px 15px 15px;
+    border-radius: 10px;
+    -webkit-box-shadow: 5px 3px 24px -2px rgba(0,0,0,0.61); 
+    box-shadow: 5px 3px 24px -2px rgba(0,0,0,0.61);
+}
+#attachmentpreview img:hover{
+    opacity: .5;
+}

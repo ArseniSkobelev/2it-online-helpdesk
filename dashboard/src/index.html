@@ -63,6 +63,8 @@
             </div>
         </div>
     </div>
+  </div>
+    <div id="attachmentpreview"></div>
   </body>
   <script src="./js/wheelzoom.js"></script>
   <script>
@@ -79,6 +81,15 @@
     document.getElementById("files").onchange = function(e) { 
       if(document.getElementById("files").files[0].path){
         attachmentsArray.push(document.getElementById("files").files[0].path)
+        var item = document.createElement("img")
+        item.src = document.getElementById("files").files[0].path
+        item.classList = "attachment"
+        item.id = attachmentsArray.length
+        item.onclick = function () {
+          attachmentsArray.pop(this.id)
+          this.style.display = "none"
+        };
+        document.getElementById("attachmentpreview").appendChild(item)
       }
     };
 
