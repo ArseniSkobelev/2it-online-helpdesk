@@ -220,6 +220,18 @@ main {
     align-items: center;
     flex-direction: column;
 }
+.loading-messages{
+    height: 100%;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+.loading-messages img{
+    height: 80px !important;
+    width: auto !important;
+}
 .size {
     height: 110px;
     width: auto;

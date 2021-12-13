@@ -101,7 +101,6 @@ var respondFile = {
 app.post('/form', function (req, res) {
     pool.getConnection((err, connection) => {
         if(err) throw err;
-        console.log('connected as id ' + connection.threadId);
         connection.query('INSERT INTO messages (name, email, title, message, phonenum, avdeling) VALUES (?, ?, ?, ?, ?, ?)',[
             req.query.name,
             req.query.email,
@@ -127,18 +126,12 @@ app.post('/form', function (req, res) {
                 transporter.sendMail(mailFrom, function(error, info){
                     if (error) {
                         console.log(error);
-                    } else {
-                        console.log("Email sent: " + info.response);
-                        console.log(mailFrom)
-                    }
+                    } 
                 });
                 transporter.sendMail(mailTo, function(error, info){
                     if (error) {
                         console.log(error);
-                    } else {
-                        console.log("Email sent: " + info.response);
-                        console.log(mailTo)
-                    }
+                    } 
                 });
             })
             res.status(200).send("Database updated succsexfully")
@@ -185,42 +178,42 @@ function scanInbox() {
                         if(err) throw err
                         pool.getConnection((err, connection) => {
                             if(err) throw err;
-                            console.log('connected as id ' + connection.threadId);
                             connection.query("SELECT * FROM messages WHERE email = ? ORDER BY id DESC LIMIT 1", [mail.from.value[0].address], (err, rows) =>{
                                 if (rows.length > 0) {
                                     connection.query("INSERT INTO log (ticket_id, message_from, message_text) VALUES (?, ?, ?)", [rows[0].id, rows[0].email, erp(mail.text, true)], (err, rows) =>{
                                         var oldRows = rows
                                         if (err) throw err
                                         if (mail.attachments.length > 0) {
-                                            mail.attachments.forEach(element => {
-                                                if (element.contentType.includes("image/")) {
-                                                    fs.writeFile("./attachments/" + element.filename, element.content, function(err) {
-                                                        if(err) throw err;
-                                                        cloudinary.uploader.upload("./attachments/" + element.filename, function(err, result) {
+                                            if (rows[0]) {
+                                                mail.attachments.forEach(element => {
+                                                    if (element.contentType.includes("image/")) {
+                                                        fs.writeFile("./attachments/" + element.filename, element.content, function(err) {
                                                             if(err) throw err;
-                                                            connection.query('INSERT INTO attachments (log_id, path) VALUES (?, ?)',[rows.insertId, result.url], (err, rows) => {
+                                                            cloudinary.uploader.upload("./attachments/" + element.filename, function(err, result) {
                                                                 if(err) throw err;
-                                                                fs.unlink("./attachments/" + element.filename, (err) => {
-                                                                    if(err) throw err
-                                                                })
-                                                            });
-                                                            io.sockets.emit("updatedMessages", oldRows[0].id)
+                                                                connection.query('INSERT INTO attachments (log_id, path) VALUES (?, ?)',[rows.insertId, result.url], (err, rows) => {
+                                                                    if(err) throw err;
+                                                                    fs.unlink("./attachments/" + element.filename, (err) => {
+                                                                        if(err) throw err
+                                                                    })
+                                                                });
+                                                                io.sockets.emit("updatedMessages", oldRows[0].id)
+                                                            })
                                                         })
-                                                    })
-                                                } else {
-                                                    respondFile.to = email
-                                                    transporter.sendMail(respondFile, function(error, info){
-                                                        if (error) {
-                                                            console.log(error);
-                                                        } else {
-                                                            console.log("Email sent: " + info.response);
-                                                            console.log(mailFrom)
-                                                        }
-                                                    });
-                                                }
-                                            });
+                                                    } else {
+                                                        respondFile.to = email
+                                                        transporter.sendMail(respondFile, function(error, info){
+                                                            if (error) {
+                                                                console.log(error);
+                                                            } 
+                                                        });
+                                                    }
+                                                });
+                                            }
                                         } else{
-                                            io.sockets.emit("updatedMessages", rows[0].id)
+                                            if (rows[0].id) {
+                                                io.sockets.emit("updatedMessages", oldRows[0].id)
+                                            }
                                         }
                                     })
                                 }
