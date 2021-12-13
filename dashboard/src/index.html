@@ -63,6 +63,8 @@
             </div>
         </div>
     </div>
+  </div>
+    <div id="attachmentpreview"><i class="fas fa-arrow-right" onclick="attachmentToggle()"></i></div>
   </body>
   <script src="./js/wheelzoom.js"></script>
   <script>
@@ -79,6 +81,16 @@
     document.getElementById("files").onchange = function(e) { 
       if(document.getElementById("files").files[0].path){
         attachmentsArray.push(document.getElementById("files").files[0].path)
+        var item = document.createElement("img")
+        item.src = document.getElementById("files").files[0].path
+        item.id = attachmentsArray.length
+        item.classList = "attachment"
+        item.onclick = function () {
+          attachmentsArray.pop(this.id)
+          this.style.display = "none"
+        };
+        document.getElementById("attachmentpreview").appendChild(item)
+        attachmentToggle("open")
       }
     };
 
@@ -236,9 +248,12 @@
     function refreshMessages() {
       document.getElementById("messages").innerHTML=""
       ipcRenderer.send('loadMessages', currentTicket.id)
+      gotoBottom()
     };
     function gotoBottom(){
-      element.scrollTop = element.scrollHeight - element.clientHeight;
+      setTimeout(() => {
+        element.scrollTop = element.scrollHeight - element.clientHeight;
+      }, 10);
     }
     function closeTicket() {
       if (document.getElementsByClassName("Ticket")[0] == undefined) {
@@ -263,6 +278,26 @@
     function updateTicket() {
       document.getElementById("ticketMenu").innerHTML = ""
       ipcRenderer.send("loadTickets")
+    }
+    function attachmentToggle(arg) {
+      if (arg == "open") {
+        document.getElementById("attachmentpreview").classList.add("right")
+        document.getElementById("attachmentpreview").classList.remove("left")
+        document.getElementById("attachmentpreview").style.transition = ".5S"
+        document.getElementById("attachmentpreview").style.transform = "translateX(0px)"
+        return
+      }
+      if(document.getElementById("attachmentpreview").className.includes("right")){
+        document.getElementById("attachmentpreview").classList.add("left")
+        document.getElementById("attachmentpreview").classList.remove("right")
+        document.getElementById("attachmentpreview").style.transition = ".5S"
+        document.getElementById("attachmentpreview").style.transform = "translateX(-" + (document.getElementById("attachmentpreview").offsetWidth - 40) + "px)"
+      }else{
+        document.getElementById("attachmentpreview").classList.add("right")
+        document.getElementById("attachmentpreview").classList.remove("left")
+        document.getElementById("attachmentpreview").style.transition = ".5S"
+        document.getElementById("attachmentpreview").style.transform = "translateX(0px)"
+      }
     }
   </script>
 </html>
