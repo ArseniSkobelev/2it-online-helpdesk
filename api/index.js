@@ -116,10 +116,28 @@ app.post('/form', function (req, res) {
                 res.status(500).send("Something went wrong with updating database")
                 throw err
             }
+
             console.log('Database updated succsexfully');
-            
-            connection.query("SELECT * FROM messages WHERE message = ? LIMIT 1", [req.query.message], (err, rows) =>{
+            connection.query("SELECT * FROM messages WHERE email = ? AND status = ? ORDER BY id", [req.query.email, "open"], (err, rows) =>{
                 mailTo.to = req.query.email
+                mailTo.subject = "Dine gamle sak har blitt stengt"
+                mailTo.text = "Siden du startet en ny sak, har vi lukket dine gamle saker \nDen nye saken er fortsatt aktiv."
+                if (err) throw err
+                if (rows.length > 1) {
+                    transporter.sendMail(mailTo, function(error, info){
+                        if (error) {
+                            console.log(error);
+                        } else {
+                            console.log("Email sent: " + info.response);
+                            console.log(mailTo)
+                        }
+                    });
+                    for (let i = 0; i < rows.length -1; i++) {
+                        connection.query("UPDATE messages SET status = ? WHERE id = ?", ["closed", rows[i].id], (err, rows) =>{
+                            if (err) throw err
+                        })
+                    }
+                }
                 mailFrom.subject = "Ticket submited with id #" + rows[0].id;
                 mailTo.subject = "Ticket submited with id #" + rows[0].id;
                 mailFrom.text = req.query.message + "\n Check dashboard for more info";
