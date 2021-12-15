@@ -114,6 +114,7 @@ main {
 
 #paddinBox {
     overflow: hidden;
+    height: 100%;
 }
 
 .recieved > div {

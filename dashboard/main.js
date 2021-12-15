@@ -128,6 +128,9 @@ function createWindow () {
         });
     })
     ipcMain.on("sendMessage", function(e, obj) {
+        mailTo.text = obj.message
+        mailTo.to = obj.email
+        attachmentsArray = []
         var sent = false
         pool.getConnection((err, connection) => {
             if(err) throw err;
@@ -135,6 +138,7 @@ function createWindow () {
             connection.query('INSERT INTO log (ticket_id, message_from, message_text, status) VALUES (?, ?, ?, ?)',[obj.id, 'vg1im.alesundvgs@gmail.com', obj.message, "read"], (err, rows) => {
                 if(err) throw err;
                 if (obj.path.length > 0) {
+                    sent = true
                     imgArray = []
                     var bar = new Promise((resolve, reject) => {
                         obj.path.forEach((element, index, array) => {
@@ -152,9 +156,6 @@ function createWindow () {
                         });
                     });
                     bar.then(() => {
-                        mailTo.text = obj.message
-                        mailTo.to = obj.email
-                        attachmentsArray = []
                         if (imgArray.length > 0) {
                             var far = new Promise((resolve, reject) => {
                                 imgArray.forEach((element, index, array) => {
@@ -179,10 +180,15 @@ function createWindow () {
                         })
                     })
                 }
+                if (sent == false) {
+                    transporter.sendMail(mailTo, function(error, info){
+                        if (error) throw error;
+                        console.log("Email sent: " + info.response);   
+                        e.sender.send("refreshMessages")
+                        sent = true
+                    });
+                }
             })
-            if (sent == false) {
-                e.sender.send("refreshMessages")
-            }
             connection.release();
         });
     })
