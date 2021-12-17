@@ -207,7 +207,11 @@ function scanInbox() {
                             connection.query("SELECT * FROM messages WHERE email = ? ORDER BY id DESC LIMIT 1", [mail.from.value[0].address], (err, rows) =>{
                                 var oldRows = rows
                                 if (rows.length > 0) {
-                                    connection.query("INSERT INTO log (ticket_id, message_from, message_text) VALUES (?, ?, ?)", [rows[0].id, rows[0].email, erp(mail.text, true)], (err, rows) =>{
+                                    var parsedMail = erp(mail.text, true)
+                                    if (parsedMail.includes("Sendt fra E-post for Windows Fra:")) {
+                                        parsedMail = parsedMail.split("Sendt fra E-post for Windows Fra:")[0]
+                                    }
+                                    connection.query("INSERT INTO log (ticket_id, message_from, message_text) VALUES (?, ?, ?)", [rows[0].id, rows[0].email, parsedMail], (err, rows) =>{
                                         if (err) throw err
                                         if (mail.attachments.length > 0) {
                                             mail.attachments.forEach(element => {
