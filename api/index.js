@@ -217,7 +217,7 @@ function scanInbox() {
                                             mail.attachments.forEach(element => {
                                                 fs.writeFile("./attachments/" + element.filename, element.content, function(err) {
                                                     if(err) throw err;
-                                                    cloudinary.uploader.upload("./attachments/" + element.filename, function(err, result) {
+                                                    cloudinary.uploader.upload("./attachments/" + element.filename, {resource_type: "auto"}, function(err, result) {
                                                         if(err) throw err;
                                                         connection.query('INSERT INTO attachments (log_id, path) VALUES (?, ?)',[rows.insertId, result.url], (err, rows) => {
                                                             if(err) throw err;
@@ -225,10 +225,10 @@ function scanInbox() {
                                                                 if(err) throw err
                                                             })
                                                         });
-                                                        io.sockets.emit("updatedMessages", oldRows[0].id)
                                                     })
                                                 })
                                             });
+                                            io.sockets.emit("updatedMessages", oldRows[0].id)   
                                         } else{
                                             io.sockets.emit("updatedMessages", oldRows[0].id)
                                         }

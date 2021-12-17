@@ -186,6 +186,8 @@
           arg.attachments.forEach(element => {
             if (element.path.toLowerCase().includes(".png") || element.path.toLowerCase().includes(".ico") || element.path.toLowerCase().includes(".jpeg") || element.path.toLowerCase().includes(".jpg") || element.path.toLowerCase().includes(".gif")) {
               itemDiv.innerHTML += "<img class='imageInBox' onclick='bigPic(this)' src='" + element.path + "'></img>"
+            }else if (element.path.toLowerCase().includes(".pdf")){
+              itemDiv.innerHTML += "<img class='imageInBox' onclick='bigPic(this)' src='" + element.path.split(".pdf")[0] + ".jpg" + "'></img>"
             } else {
               unsopportedArray.push(element.path)
             }
@@ -193,7 +195,7 @@
         if (unsopportedArray.length > 0) {
           itemDiv.innerHTML += "<h1>attachments (not images)</h1>"
           unsopportedArray.forEach(element => {
-            itemDiv.innerHTML += "<a class='unsupportedFile' href='" + element +" ' download>" + element.split("/")[7] +"</a>"
+            itemDiv.innerHTML += "<a class='unsupportedFile' href='" + element +"' download>" + element.split("/")[7] +"</a>"
           });
         }
       } 
@@ -273,7 +275,7 @@
     function gotoBottom(){
       setTimeout(() => {
         element.scrollTop = element.scrollHeight - element.clientHeight;
-      }, 100);
+      }, 200);
     }
     function closeTicket() {
       if (document.getElementsByClassName("Ticket")[0] == undefined) {
