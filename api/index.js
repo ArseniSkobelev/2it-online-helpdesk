@@ -215,35 +215,19 @@ function scanInbox() {
                                         if (err) throw err
                                         if (mail.attachments.length > 0) {
                                             mail.attachments.forEach(element => {
-                                                if (element.contentType.includes("image/")) {
-                                                    fs.writeFile("./attachments/" + element.filename, element.content, function(err) {
+                                                fs.writeFile("./attachments/" + element.filename, element.content, function(err) {
+                                                    if(err) throw err;
+                                                    cloudinary.uploader.upload("./attachments/" + element.filename, function(err, result) {
                                                         if(err) throw err;
-                                                        cloudinary.uploader.upload("./attachments/" + element.filename, function(err, result) {
+                                                        connection.query('INSERT INTO attachments (log_id, path) VALUES (?, ?)',[rows.insertId, result.url], (err, rows) => {
                                                             if(err) throw err;
-                                                            connection.query('INSERT INTO attachments (log_id, path) VALUES (?, ?)',[rows.insertId, result.url], (err, rows) => {
-                                                                if(err) throw err;
-                                                                fs.unlink("./attachments/" + element.filename, (err) => {
-                                                                    if(err) throw err
-                                                                })
-                                                            });
-                                                            io.sockets.emit("updatedMessages", oldRows[0].id)
-                                                        })
+                                                            fs.unlink("./attachments/" + element.filename, (err) => {
+                                                                if(err) throw err
+                                                            })
+                                                        });
+                                                        io.sockets.emit("updatedMessages", oldRows[0].id)
                                                     })
-                                                } else ) {
-                                                    fs.writeFile("./attachments/" + element.filename, element.content, function(err) {
-                                                        if(err) throw err;
-                                                        cloudinary.uploader.upload("./attachments/" + element.filename, function(err, result) {
-                                                            if(err) throw err;
-                                                            connection.query('INSERT INTO attachments (log_id, path) VALUES (?, ?)',[rows.insertId, result.url], (err, rows) => {
-                                                                if(err) throw err;
-                                                                fs.unlink("./attachments/" + element.filename, (err) => {
-                                                                    if(err) throw err
-                                                                })
-                                                            });
-                                                            io.sockets.emit("updatedMessages", oldRows[0].id)
-                                                        })
-                                                    })
-                                                }
+                                                })
                                             });
                                         } else{
                                             io.sockets.emit("updatedMessages", oldRows[0].id)
