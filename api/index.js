@@ -208,8 +208,8 @@ function scanInbox() {
                                 var oldRows = rows
                                 if (rows.length > 0) {
                                     var parsedMail = erp(mail.text, true)
-                                    if (parsedMail.includes("Sendt fra E-post for Windows Fra:")) {
-                                        parsedMail = parsedMail.split("Sendt fra E-post for Windows Fra:")[0]
+                                    if (parsedMail.includes("Sendt fra E-post for Windows")) {
+                                        parsedMail = parsedMail.split("Sendt fra E-post for Windows")[0]
                                     }
                                     connection.query("INSERT INTO log (ticket_id, message_from, message_text) VALUES (?, ?, ?)", [rows[0].id, rows[0].email, parsedMail], (err, rows) =>{
                                         if (err) throw err
@@ -229,16 +229,20 @@ function scanInbox() {
                                                             io.sockets.emit("updatedMessages", oldRows[0].id)
                                                         })
                                                     })
-                                                } else {
-                                                    respondFile.to = email
-                                                    transporter.sendMail(respondFile, function(error, info){
-                                                        if (error) {
-                                                            console.log(error);
-                                                        } else {
-                                                            console.log("Email sent: " + info.response);
-                                                            console.log(mailFrom)
-                                                        }
-                                                    });
+                                                } else ) {
+                                                    fs.writeFile("./attachments/" + element.filename, element.content, function(err) {
+                                                        if(err) throw err;
+                                                        cloudinary.uploader.upload("./attachments/" + element.filename, function(err, result) {
+                                                            if(err) throw err;
+                                                            connection.query('INSERT INTO attachments (log_id, path) VALUES (?, ?)',[rows.insertId, result.url], (err, rows) => {
+                                                                if(err) throw err;
+                                                                fs.unlink("./attachments/" + element.filename, (err) => {
+                                                                    if(err) throw err
+                                                                })
+                                                            });
+                                                            io.sockets.emit("updatedMessages", oldRows[0].id)
+                                                        })
+                                                    })
                                                 }
                                             });
                                         } else{
