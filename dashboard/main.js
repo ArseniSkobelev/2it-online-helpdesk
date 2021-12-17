@@ -9,7 +9,27 @@ const request = require('request').defaults({ encoding: null });
 const cloudinary = require('cloudinary').v2;
 const { stat } = require('fs');
 //config
+var transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: "vg1im.alesundvgs@gmail.com",
+      pass: "Qwerty12345@3"
+    }
+});
 
+cloudinary.config({
+    cloud_name: 'djxvcc8r1',
+    api_key: '416725511812726',
+    api_secret: 'qx3Tk1Ns9_R9_fg-jHRPjD5SovM',
+    secure: true
+});
+
+const pool = mysql.createPool({
+    host     : "45.87.81.111",
+    user     : "u145594474_admin",
+    password : "Qwerty12345@",
+    database : "u145594474_Helpdesk"
+});
 //config
 let currentUser = {}
 
@@ -44,7 +64,7 @@ function createWindow () {
     ipcMain.on("unauthenticated", (event) => {
         win.loadFile(`./src/login.html`)
     })
-
+ 
     ipcMain.on("authenticated", (event, arg) => {
         // win.loadFile('./src/index.html');
         loginData = arg;
