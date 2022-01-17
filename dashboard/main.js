@@ -1,9 +1,9 @@
-const { app, BrowserWindow, ipcMain, ipcRenderer } = require('electron');
+const { app, BrowserWindow, ipcMain, ipcRenderer, dialog } = require('electron');
 const path = require('path');
 const mysql = require('mysql');
 const { title } = require('process');
 const nodemailer = require('nodemailer');
-const { forEach } = require('lodash');
+const { forEach, isNull } = require('lodash');
 const dotenv = require('dotenv').config()
 const request = require('request').defaults({ encoding: null });
 const cloudinary = require('cloudinary').v2;
@@ -64,7 +64,6 @@ function createWindow () {
                     userPsw = rows[0].password;
                     if(psw == userPsw) {
                         win.loadFile(`./src/index.html`)
-    
                     } else {
                         win.loadFile(`./src/login.html`)
                     }
@@ -143,15 +142,24 @@ function createWindow () {
                     var bar = new Promise((resolve, reject) => {
                         obj.path.forEach((element, index, array) => {
                             cloudinary.uploader.upload(element, function(error, result) {
-                                imgArray.push(result.url)
-                                if(error) throw error;
-                                connection.query('SELECT id FROM log ORDER BY id DESC LIMIT 1', (err, rows) => {
-                                    if(err) throw err;
-                                    connection.query('INSERT INTO attachments (log_id, path) VALUES (?, ?)',[rows[0].id, result.url], (err, rows) => {
+                                if (result != null) {
+                                    imgArray.push(result.url)
+                                    if(error) throw error;
+                                    connection.query('SELECT id FROM log ORDER BY id DESC LIMIT 1', (err, rows) => {
                                         if(err) throw err;
-                                        if (index === array.length -1) resolve();
+                                        connection.query('INSERT INTO attachments (log_id, path) VALUES (?, ?)',[rows[0].id, result.url], (err, rows) => {
+                                            if(err) throw err;
+                                            if (index === array.length -1) resolve();
+                                        });
+                                    })
+                                }else{
+                                    dialog.showMessageBox(win, {
+                                        title: 'Bad file',
+                                        buttons: ['go away'],
+                                        type: 'warning',
+                                        message: 'Only images are supported dumbass',
                                     });
-                                })
+                                }
                             });
                         });
                     });
