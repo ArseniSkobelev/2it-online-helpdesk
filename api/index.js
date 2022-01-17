@@ -207,24 +207,23 @@ function scanInbox() {
                             connection.query("SELECT * FROM messages WHERE email = ? ORDER BY id DESC LIMIT 1", [mail.from.value[0].address], (err, rows) =>{
                                 var oldRows = rows
                                 if (rows.length > 0) {
-                                    var parsedMail = erp(mail.text, true)
-                                    if (parsedMail.includes("Sendt fra E-post for Windows")) {
-                                        parsedMail = parsedMail.split("Sendt fra E-post for Windows")[0]
-                                    }
-                                    connection.query("INSERT INTO log (ticket_id, message_from, message_text) VALUES (?, ?, ?)", [rows[0].id, rows[0].email, parsedMail], (err, rows) =>{
+                                    connection.query("INSERT INTO log (ticket_id, message_from, message_text) VALUES (?, ?, ?)", [rows[0].id, rows[0].email, erp(mail.text, true)], (err, rows) =>{
                                         if (err) throw err
                                         if (mail.attachments.length > 0) {
                                             mail.attachments.forEach(element => {
-                                                fs.writeFile("./attachments/" + element.filename, element.content, function(err) {
-                                                    if(err) throw err;
-                                                    cloudinary.uploader.upload("./attachments/" + element.filename, {resource_type: "auto"}, function(err, result) {
+                                                if (element.contentType.includes("image/")) {
+                                                    fs.writeFile("./attachments/" + element.filename, element.content, function(err) {
                                                         if(err) throw err;
-                                                        connection.query('INSERT INTO attachments (log_id, path) VALUES (?, ?)',[rows.insertId, result.url], (err, rows) => {
+                                                        cloudinary.uploader.upload("./attachments/" + element.filename, function(err, result) {
                                                             if(err) throw err;
-                                                            fs.unlink("./attachments/" + element.filename, (err) => {
-                                                                if(err) throw err
-                                                            })
-                                                        });
+                                                            connection.query('INSERT INTO attachments (log_id, path) VALUES (?, ?)',[rows.insertId, result.url], (err, rows) => {
+                                                                if(err) throw err;
+                                                                fs.unlink("./attachments/" + element.filename, (err) => {
+                                                                    if(err) throw err
+                                                                })
+                                                            });
+                                                            io.sockets.emit("updatedMessages", oldRows[0].id)
+                                                        })
                                                     })
                                                 } else {
                                                     respondFile.to = rows[0].email
@@ -238,7 +237,6 @@ function scanInbox() {
                                                     });
                                                 }
                                             });
-                                            io.sockets.emit("updatedMessages", oldRows[0].id)   
                                         } else{
                                             io.sockets.emit("updatedMessages", oldRows[0].id)
                                         }

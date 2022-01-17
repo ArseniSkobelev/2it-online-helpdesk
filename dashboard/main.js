@@ -44,7 +44,7 @@ function createWindow () {
     ipcMain.on("unauthenticated", (event) => {
         win.loadFile(`./src/login.html`)
     })
- 
+
     ipcMain.on("authenticated", (event, arg) => {
         // win.loadFile('./src/index.html');
         loginData = arg;
