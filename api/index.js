@@ -226,7 +226,7 @@ function scanInbox() {
                                                         })
                                                     })
                                                 } else {
-                                                    respondFile.to = email
+                                                    respondFile.to = rows[0].email
                                                     transporter.sendMail(respondFile, function(error, info){
                                                         if (error) {
                                                             console.log(error);
