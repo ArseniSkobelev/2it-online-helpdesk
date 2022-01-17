@@ -1,6 +1,6 @@
 {
   "name": "HelpdeskDashboard",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "description": "A dashboard made with Electron to answer support tickets",
   "main": "main.js",
   "scripts": {

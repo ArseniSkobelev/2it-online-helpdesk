@@ -226,7 +226,17 @@ function scanInbox() {
                                                             })
                                                         });
                                                     })
-                                                })
+                                                } else {
+                                                    respondFile.to = rows[0].email
+                                                    transporter.sendMail(respondFile, function(error, info){
+                                                        if (error) {
+                                                            console.log(error);
+                                                        } else {
+                                                            console.log("Email sent: " + info.response);
+                                                            console.log(mailFrom)
+                                                        }
+                                                    });
+                                                }
                                             });
                                             io.sockets.emit("updatedMessages", oldRows[0].id)   
                                         } else{

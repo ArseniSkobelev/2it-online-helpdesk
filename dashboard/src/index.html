@@ -10,6 +10,9 @@
         <script defer>const socket = io("http://13.51.163.75:3000");</script>
   </head>
   <body>
+    <div id="err" class="hidden">
+
+    </div>
     <div id="bigImg" onclick="bigPic()">
       <img id="img" >
     </div>
@@ -148,6 +151,9 @@
     })
     ipcRenderer.on("refreshMessages", ()=>{
       refreshMessages()
+    })
+    ipcRenderer.on("err", (obj)=>{
+      err(obj.msg)
     })
     ipcRenderer.on("logLoadedReply", (e, arg) => {
       var tempTime = currentTicket.date.toUTCString().split(" ")[0] + " " + currentTicket.date.toUTCString().split(" ")[1] + " " + currentTicket.date.toUTCString().split(" ")[2]
@@ -300,6 +306,10 @@
     function updateTicket() {
       document.getElementById("ticketMenu").innerHTML = ""
       ipcRenderer.send("loadTickets")
+    }
+    function err(text) {
+      document.getElementById("err").innerHTML = text
+      document.getElementById("err").className = "shown"
     }
     function attachmentToggle(arg) {
       if (arg == "open") {
